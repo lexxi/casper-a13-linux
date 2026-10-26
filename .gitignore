@@ -1,0 +1,36 @@
+# Source/build trees should be maintained separately, not committed wholesale
+linux/
+busybox/
+u-boot/
+build-casper/
+sunxi-tools/
+initramfs/
+*.cpio
+*.cpio.gz
+zImage
+uImage
+*.dtb
+*.img
+*.bin
+*.fex
+*.key
+*.pem
+id_rsa*
+id_ed25519*
+wpa_supplicant.conf
+*.pcap
+*.pcapng
+*.log
+# Android NAND backup materials
+nanda*
+nandb*
+nandc*
+nandd*
+nande*
+nandf*
+nandg*
+nandh*
+nandi*
+nandj*
+*.backup
+*.bak
