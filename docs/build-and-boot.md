@@ -114,18 +114,19 @@ The `boot.scr` was generated with U-Boot `mkimage` from `boot-linux.cmd`:
   ~/casper-a13/boot.scr
 ```
 
-The successful boot sequence used the following U-Boot commands (documented from the working setup, not a claim that the files currently exist in this repository):
+The successful boot sequence loads the kernel, initramfs and device tree from FAT32 on `mmc 0:1`, remembering the initramfs length **before** loading the DTB:
 
 ```text
 mmc dev 0
 fatload mmc 0:1 0x42000000 zImage
 fatload mmc 0:1 0x43000000 initramfs.cpio.gz
+setenv initrd_size ${filesize}
 fatload mmc 0:1 0x44000000 sun5i-a13-q8-tablet.dtb
 setenv bootargs 'console=ttyS1,115200 console=tty0 loglevel=8 ignore_loglevel rdinit=/init'
-bootz 0x42000000 0x43000000:${filesize} 0x44000000
+bootz 0x42000000 0x43000000:${initrd_size} 0x44000000
 ```
 
-**Important:** U-Boot's `filesize` changes after each `fatload`; the working script captured initramfs size in `initrd_size` immediately after loading it, then used `bootz 0x42000000 0x43000000:${initrd_size} 0x44000000`. Any new script **must do that**, rather than using the simplified last line in the listing above.
+This is the documented boot-command sequence; the exact `boot-linux.cmd` source remains on the local build machine. Note that U-Boot overwrites `filesize` after each `fatload`, so `initrd_size` must be saved immediately after the initramfs load.
 
 ## Guardrails
 
