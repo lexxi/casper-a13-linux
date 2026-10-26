@@ -2,7 +2,7 @@
 
 Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot and BusyBox, booted **from microSD without modifying the original Android NAND**.
 
-> **Status (2026-10-26):** SD boot to a visible BusyBox shell is **confirmed working**. USB keyboard input, Wi-Fi networking, SSH and touchscreen are **not yet confirmed**. The latest kernel rebuild is still in progress.
+> **Status (2026-10-26):** SD boot to a visible BusyBox shell is **confirmed working**. USB keyboard input, Wi-Fi networking, SSH and touchscreen are **not yet confirmed**. The USB-focused kernel rebuild has completed; a subsequent Wi-Fi-enabled build is being prepared (not yet boot-tested).
 
 ## Hardware
 
@@ -29,7 +29,14 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 5. Booted via FEL during initial testing, then installed U-Boot in unused space before the SD card's first FAT32 partition.
 6. Confirmed that **resetting the tablet boots from microSD**: SPL → U-Boot → Linux → BusyBox `~ #` on the LCD.
 
-Read [build and boot notes](docs/build-and-boot.md) before attempting to reproduce this. The SD flashing operation is destructive if the wrong disk is selected.
+## Einrichtung und Bedienung
+
+- **[Windows und WSL2 installieren und verwenden](docs/wsl-setup.md)** — Ubuntu, Cross-Compiler, Windows/WSL-Dateizugriff und FEL per USB.
+- **[Casper starten und bedienen](docs/bedienung.md)** — SD-Boot, Bootdateien, aktuelle Eingabemöglichkeiten und Diagnose.
+- **[Kernel, U-Boot und BusyBox bauen](docs/build-and-boot.md)** — dokumentierte Build- und Bootschritte.
+- [Hardwaredetails](docs/hardware.md) und [Entwicklungsfahrplan](docs/roadmap.md).
+
+**Achtung:** Die SD-Bootloader-Installation kann bei Wahl des falschen Datenträgers Daten zerstören. Unsere Dokumentation enthält keine blind ausführbare Rohdatenträger-Flash-Anweisung.
 
 ## Working tree (development machine)
 
