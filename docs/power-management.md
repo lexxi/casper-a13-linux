@@ -95,3 +95,13 @@ Then repack the `initramfs-network` directory while preserving ownership and mod
 6. Consider a read-only root filesystem with a dedicated persistent data partition rather than frequently writing to FAT32.
 
 Never commit raw SD images, credentials, WLAN configuration, SSH keys or battery-specific identifiers.
+
+## Update 2026-10-27 — confirmed boot and power-button shutdown
+
+The earlier experimental status above is superseded by successful reboot tests. The deployed `power-services.sh` uses `busybox timeout 90 busybox ntpd -n -q -p 192.168.98.32` followed by `casper-power-monitor.sh 300`. Time synchronization and CSV writes were verified automatically after reboot.
+
+`axp20x-pek` exposes `/dev/input/event0`; `evtest` and a separately cross-compiled ARMHF `casper-power-button` program confirmed `KEY_POWER` (116) pressed/released events. `/init` starts the button monitor in the background. On release it executes `/casper-shutdown.sh`, which signals the battery monitor to terminate, pauses briefly, calls `sync`, unmounts `/mnt/sd` (aborts if busy), and invokes `busybox poweroff -f`.
+
+The first unmount attempt failed because the Dropbear listener and session inherited open `/mnt/sd/casper-boot.log` descriptors from `network-start.sh`. Redirecting Dropbear stdin/stdout/stderr to `/dev/null` eliminated these persistent descriptors. Manual and automatic button-initiated shutdown both succeeded, the screen went dark, ping stopped, and the device subsequently powered up using the button.
+
+Remaining limitation: when shutdown aborts, the current script may leave the power monitor stopped. Rework that failure path before treating the implementation as production-grade. Power-off current has not been measured independently.
