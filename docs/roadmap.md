@@ -11,15 +11,15 @@ Updated 2026-10-27.
 | BusyBox 1.37 static initramfs | **Done** | `~ #` shell prompt visible |
 | Internal USB host and PHY | **Done** | AXP209 power supply built-in; EHCI enumerates internal USB adapter |
 | USB keyboard | **Pending** | Mini-USB OTG host adapter required |
-| USB WLAN `0bda:8176` | **Working** | RTL8188CU rev A; `RTL8XXXU_UNTESTED=y`, `rtl8192cufw_TMSC.bin` |
+| USB WLAN `0bda:8176` | **Working** | RTL8188CU rev A; preferred built-in `RTL8192CU=y`, TMSC firmware; `RTL8XXXU` disabled |
 | DHCP / WPA2 | **Working** | WPA2 association and DHCP address confirmed |
 | SSH access | **Working** | Dropbear root login using matching ED25519 public key, proper `/root` ownership |
 | AXP209 battery sysfs | **Working** | Battery and USB classes; charge/discharge measured, capacity not calibrated |
-| AXP209 power key | **Driver built-in, not tested** | `CONFIG_INPUT_AXP20X_PEK=y`; verify input events before shutdown actions |
-| NTP time sync | **Manually verified** | BusyBox `ntpd` set UTC clock after starting services manually; boot automation unverified |
-| Power monitor CSV | **Manually verified** | 300-second monitor, `/mnt/sd/casper-power.csv`; fix script executable modes in initramfs |
-| Safe shutdown / persistent storage | **Pending** | Test poweroff, avoid FAT32 corruption, later read-only root/data partition |
-| Wi-Fi latency / reception | **In progress** | About −79 dBm, RX link 13 Mbit/s, severe ping jitter; test near AP and orientation |
+| AXP209 power key | **Working** | `KEY_POWER` events verified; ARMHF daemon autostarts and requests safe shutdown |
+| NTP time sync | **Working at boot** | BusyBox against local `192.168.98.32` |
+| Power monitor CSV | **Working at boot** | 300-second `/mnt/sd/casper-power.csv` monitor |
+| Safe shutdown / persistent storage | **Working** | Monitor stops, FAT32 sync/unmount succeeds, poweroff and restart tested |
+| Wi-Fi latency / reception | **Improved** | With `rtl8192cu`, 30 pings avg 5.811 ms/max 12.322 ms; 300 pings avg 9.315 ms/max 502.740 ms, 0% loss |
 | Goodix GT811 touch | **Pending** | Review I²C/pin config, DT integration |
 | Graphical touch UI | **Pending** | Choose small offline UI / terminal |
 | Second tablet | **Repair separate** | Deep-discharged battery; no Linux boot yet |
@@ -28,10 +28,12 @@ Updated 2026-10-27.
 
 The Casper has only one Mini-USB port. A Micro-USB OTG adapter is available, but not a Mini-USB OTG host cable. WLAN + SSH could provide a shell without extra input hardware, **if** the USB Wi-Fi chip, firmware and Linux USB host path work.
 
-## Current power-management work
+## Confirmed 2026-10-27 findings
 
-See [AXP209 battery, NTP and power-monitor notes](power-management.md). The test kernel includes `CONFIG_AXP20X_ADC=y`, `CONFIG_BATTERY_AXP20X=y` and `CONFIG_INPUT_AXP20X_PEK=y`. AXP209 readings show USB input around 4.2–4.4 V under load (with PC USB and separate 5 V supply) and battery discharge around −530 mA in a short test. Validate wiring/cable and battery measurements before setting any automatic cutoff. The prototype has working NTP and CSV when launched manually, but the next reboot needs to confirm corrected `0755` permissions and service autostart.
+Using `rtl8xxxu`, 19 pings near the AP averaged 472.282 ms with maximum 1707.050 ms. Switching to built-in `rtl8192cu` reduced latency drastically (30-ping sample at original location: 2.388/5.811/12.322 ms min/avg/max, no loss). Longer 300-ping test showed rare jitter spikes (maximum 502.740 ms) but no packet loss.
 
-## Next WLAN tests
+Power key `axp20x-pek` exposes `/dev/input/event0`, `KEY_POWER` code 116. An ARMHF power-button program is started by `/init` and runs `/casper-shutdown.sh` upon key release. This stops the CSV monitor, syncs and unmounts FAT32, then requests `poweroff -f`. It shut down successfully; display and ping ceased, and the tablet booted again using its button.
 
-The Linux USB bus now sees `0bda:8176`, firmware loads, and Wi-Fi plus SSH work. `iw` version 6.17 was temporarily transferred to the live ARMHF system. It reports `Power save: off`, 2.4 GHz channel 6 (2437 MHz), approximately **−79 dBm**, RX bitrate **13 Mbit/s** and TX bitrate **72.2 Mbit/s** at the measured instant. Ping responses have shown large intermittent latency spikes. Next: repeat signal and ping tests 1–2 m from the access point and at different tablet orientations; inspect retry statistics. If reception remains poor, check antenna and compare drivers. The absent `regulatory.db` is a separate cleanup item. Keep credentials out of Git.
+Initial unmount `EBUSY` was caused by Dropbear inheriting `casper-boot.log` descriptors. Redirecting its standard streams to `/dev/null` resolved the problem.
+
+Remaining: battery/USB voltage validation, shutdown failure recovery, regulatory database, touchscreen and graphical UI. Original Android NAND remains untouched.
