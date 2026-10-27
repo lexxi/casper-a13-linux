@@ -13,7 +13,9 @@
   - `idVendor` = `0bda`
   - `idProduct` = `8176`
   - `product` = `802.11n WLAN Adapter`
-  - Realtek RTL8188CUS family; `rtl8xxxu` is a candidate on modern Linux, **not tested yet**
+  - Linux 6.12 USB EHCI enumerates the same device at `2-1`; WPA2 association, DHCP and SSH verified
+  - Reception in first field test approximately **−79 dBm** at 5 m / one wall; RX link rate 13 Mbit/s, substantial latency spikes; under investigation
+  - Realtek **RTL8188CU rev A (TSMC)**, 1T1R, MAC observed locally; `rtl8xxxu` **tested working** with `CONFIG_RTL8XXXU_UNTESTED=y` and firmware `rtlwifi/rtl8192cufw_TMSC.bin`
   - `rtl8150` in the Android modules listing is an Ethernet driver and not identification of the Wi-Fi module
 
 ## Original Android hardware data
