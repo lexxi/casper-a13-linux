@@ -56,7 +56,7 @@ CONFIG_USB_EHCI_HCD=y
 CONFIG_USB_OHCI_HCD=y
 ```
 
-A subsequent configuration, **not yet boot-tested**, has:
+The **successfully boot-tested network kernel** additionally has:
 
 ```text
 CONFIG_USB_OTG=y
@@ -65,6 +65,15 @@ CONFIG_USB_MUSB_DUAL_ROLE=y
 CONFIG_USB_MUSB_SUNXI=y
 CONFIG_USB_PHY=y
 CONFIG_USB_ROLE_SWITCH=y
+CONFIG_PHY_SUN4I_USB=y
+CONFIG_POWER_SUPPLY=y
+CONFIG_MFD_AXP20X=y
+CONFIG_REGULATOR_AXP20X=y
+CONFIG_AXP20X_POWER=y
+CONFIG_CFG80211=y
+CONFIG_MAC80211=y
+CONFIG_RTL8XXXU=y
+CONFIG_RTL8XXXU_UNTESTED=y
 ```
 
 To rebuild **after any currently running build has finished**:
@@ -74,7 +83,7 @@ cd ~/casper-a13/linux
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j2 zImage dtbs
 ```
 
-The exact `sun5i-a13-q8-tablet.dts` USB host/OTG nodes and `dr_mode` still need review. Built-in drivers alone do not prove a working keyboard connection.
+The compiled device tree has `usb_otg`, `usbphy` and EHCI enabled; OHCI is disabled. The USB PHY initially remained in deferred probe because the device tree's `usb0_vbus_power-supply` provider was not available: `CONFIG_AXP20X_POWER=m` had no loadable-module infrastructure in the initramfs. Switching to **`CONFIG_AXP20X_POWER=y`** brought up MUSB and EHCI, which enumerated USB `0bda:8176` at `2-1`. `rtl8xxxu` did not bind until **`CONFIG_RTL8XXXU_UNTESTED=y`**, as the `0x8176` ID is conditional in `drivers/net/wireless/realtek/rtl8xxxu/core.c`. External keyboard remains untested.
 
 ## BusyBox / initramfs
 
@@ -93,6 +102,14 @@ Required console nodes were created when assembling the initramfs: `/dev/console
 
 **Working outcome:** Linux messages and a BusyBox shell prompt (`~ #`) are visible on the tablet LCD.
 
+## Network-enabled initramfs (tested)
+
+`~/casper-a13/initramfs-network/` extends the original BusyBox initramfs with ARMHF userspace libraries, `wpa_supplicant`, DHCP via BusyBox `udhcpc`, Dropbear and SSH public-key authentication. The script mounts the FAT32 microSD partition and writes diagnostics to **`/mnt/sd/casper-boot.log`**; it reads local **`/mnt/sd/wlan.conf`**. The tested card uses the generated `initramfs-network.cpio.gz` under the boot filename `initramfs.cpio.gz`. Firmware includes `rtlwifi/rtl8192cufw_TMSC.bin` (along with other CU firmware variants).
+
+Important SSH permissions: root's home directory and `/root/.ssh` must be owned by **UID 0/GID 0** and set to `0700`; `/root/.ssh/authorized_keys` owned by root and set to `0600`. The first SSH attempt failed with `Permission denied (publickey)` even though the public keys matched, because `/root` in the initramfs had been archived with non-root ownership. After correcting ownership and repacking, key-based root login succeeded.
+
+The ARMHF dependency packages are maintained with an isolated APT configuration in `armhf-packages/`. The `sources.list` needs **separate entries** for `resolute`, `resolute-updates` and `resolute-security`. `iw` and its ARMHF `libnl-3`/`libnl-genl-3` dependencies were transferred via SSH for live diagnostics. Avoid publishing SSH private keys, Wi-Fi passwords, host keys or raw captures from the live SD card.
+
 ## microSD FAT32 boot files
 
 The card contains:
@@ -102,6 +119,7 @@ zImage
 sun5i-a13-q8-tablet.dtb
 initramfs.cpio.gz
 boot.scr
+wlan.conf               # local only, never commit
 ```
 
 The `boot.scr` was generated with U-Boot `mkimage` from `boot-linux.cmd`:
@@ -133,4 +151,5 @@ This is the documented boot-command sequence; the exact `boot-linux.cmd` source 
 1. Preserve NAND; never use `nand write`, `flash` or eMMC/NAND installation commands without an independently verified recovery path.
 2. Back up the SD card and verify disk identity before touching raw sectors.
 3. Do not commit binaries, original FEX firmware dumps, NAND images, SSH host/private keys or WLAN credentials.
-4. Validate the USB OTG device-tree setup and Wi-Fi firmware selection before describing them as working.
+4. Wi-Fi and the internal USB host path are tested; external USB keyboard and touchscreen are not.
+5. Wi-Fi link is functional but performance is not yet satisfactory. Do not mistake PHY link bitrate for achievable throughput.
