@@ -74,6 +74,10 @@ CONFIG_CFG80211=y
 CONFIG_MAC80211=y
 CONFIG_RTL8XXXU=y
 CONFIG_RTL8XXXU_UNTESTED=y
+CONFIG_IIO=y
+CONFIG_AXP20X_ADC=y
+CONFIG_BATTERY_AXP20X=y
+CONFIG_INPUT_AXP20X_PEK=y
 ```
 
 To rebuild **after any currently running build has finished**:
@@ -109,6 +113,12 @@ Required console nodes were created when assembling the initramfs: `/dev/console
 Important SSH permissions: root's home directory and `/root/.ssh` must be owned by **UID 0/GID 0** and set to `0700`; `/root/.ssh/authorized_keys` owned by root and set to `0600`. The first SSH attempt failed with `Permission denied (publickey)` even though the public keys matched, because `/root` in the initramfs had been archived with non-root ownership. After correcting ownership and repacking, key-based root login succeeded.
 
 The ARMHF dependency packages are maintained with an isolated APT configuration in `armhf-packages/`. The `sources.list` needs **separate entries** for `resolute`, `resolute-updates` and `resolute-security`. `iw` and its ARMHF `libnl-3`/`libnl-genl-3` dependencies were transferred via SSH for live diagnostics. Avoid publishing SSH private keys, Wi-Fi passwords, host keys or raw captures from the live SD card.
+
+## Battery and background services
+
+AXP209 battery and USB power supplies are available on the verified device under `/sys/class/power_supply/axp20x-battery` and `/sys/class/power_supply/axp20x-usb`. The reference device tree enables `&battery_power_supply` already. `CONFIG_INPUT_AXP20X_PEK=y` is included, but **button events and safe poweroff have not been tested**. Details and captured readings: [power management](power-management.md).
+
+The local network-initramfs source now includes an experimental `casper-power-monitor.sh` and `power-services.sh`, and `network-start.sh` invokes the latter after Dropbear. The monitor writes `/mnt/sd/casper-power.csv` every 300 seconds; the services script attempts a bounded BusyBox NTP update first. A **manual launch** was confirmed to synchronize the clock and append one CSV record. The last boot showed both scripts present as mode `0644`, so automatic execution **failed**. Set both to `0755` in the source tree, repack, then reboot and test. Do not claim persistent startup is working until that check succeeds.
 
 ## microSD FAT32 boot files
 
