@@ -2,7 +2,7 @@
 
 Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot and BusyBox, booted **from microSD without modifying the original Android NAND**.
 
-> **Status (2026-10-27):** U-Boot 2025.01 → Linux 6.12.0 → BusyBox boots autonomously from microSD. **Internal Realtek Wi-Fi, WPA2, DHCP and SSH with public-key authentication are confirmed working.** AXP209 battery/USB measurements and one-shot NTP plus CSV power monitoring are also tested. WLAN latency/performance, autonomous monitoring after reboot, touchscreen and external USB keyboard remain pending.
+> **Status (2026-10-27):** Linux 6.12 boots from microSD with original NAND untouched. RTL8188CU Wi-Fi is now stable with built-in `rtl8192cu` (replacing high-latency `rtl8xxxu`). Dropbear SSH, local NTP `192.168.98.32`, automatic AXP209 battery monitoring, and safe power-button shutdown with FAT32 unmount are boot-tested.
 
 ## Hardware
 
@@ -32,7 +32,9 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 8. Enabled `CONFIG_RTL8XXXU_UNTESTED=y` to bind RTL8188CU (`0bda:8176`); loaded `rtlwifi/rtl8192cufw_TMSC.bin` successfully.
 9. Confirmed WPA2 association, DHCP lease, and Dropbear SSH login as root via an authorized ED25519 public key.
 10. Enabled AXP209 battery/ADC and power-key kernel support; confirmed charging/discharging readings and a working CSV power-monitor prototype.
-11. Verified BusyBox NTP synchronization and logging after manual launch; persistent autostart still needs a reboot test.
+11. Confirmed automatic local NTP synchronization and CSV battery monitoring after reboot.
+12. Confirmed AXP209 `KEY_POWER` input, autostarted ARMHF power-button daemon and successful safe shutdown (monitor stop, sync, FAT32 unmount, poweroff), followed by reboot using the power button.
+13. Fixed Dropbear inheriting the SD boot-log file descriptors, which had initially blocked FAT32 unmount.
 
 ## Einrichtung und Bedienung
 
@@ -59,13 +61,10 @@ The upstream Linux, U-Boot and BusyBox source trees are **not vendored** into th
 
 ## Current priorities
 
-- Verify the executable bits and **reboot-time autostart** of NTP and the power monitor; avoid duplicate log writers.
-- Validate battery measurements, USB cable voltage drop and safe shutdown / AXP209 power-button handling.
-
-- Diagnose poor Wi-Fi reception and severe ping jitter (measured approximately **−79 dBm**, RX link rate **13 Mbit/s**, at about 5 m with one wall); compare close to access point and tablet orientation.
-- Compare `rtl8xxxu` to alternative `rtl8192cu` only if reception tests do not explain the issue.
-- Package `iw` and dependencies in the persistent image; verify regulatory database and further networking refinements.
-- Test Mini-USB OTG keyboard and Goodix GT811 touchscreen; explore a lightweight interface.
+- Preserve the working `rtl8192cu` kernel and initramfs locally; keep the older `rtl8xxxu` kernel as fallback.
+- WLAN baseline: 30 pings at original position, 0% loss, 2.388/5.811/12.322 ms min/avg/max; 300 pings, 0% loss, 2.148/9.315/502.740 ms (occasional jitter remains).
+- Validate battery readings and USB input voltage under load.
+- Goodix GT811 touch and lightweight 800×480 UI remain next milestones.
 
 See [roadmap](docs/roadmap.md) and [operation guide](docs/bedienung.md).
 
