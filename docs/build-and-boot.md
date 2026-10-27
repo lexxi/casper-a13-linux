@@ -163,3 +163,24 @@ This is the documented boot-command sequence; the exact `boot-linux.cmd` source 
 3. Do not commit binaries, original FEX firmware dumps, NAND images, SSH host/private keys or WLAN credentials.
 4. Wi-Fi and the internal USB host path are tested; external USB keyboard and touchscreen are not.
 5. Wi-Fi link is functional but performance is not yet satisfactory. Do not mistake PHY link bitrate for achievable throughput.
+
+## Updated reference build — rtl8192cu and shutdown (2026-10-27)
+
+The earlier `rtl8xxxu` settings and unverified-power status documented above describe the **initial** build only. The tested, preferred Linux 6.12 kernel now has:
+
+```text
+CONFIG_RTL_CARDS=y
+CONFIG_RTL8192CU=y
+CONFIG_RTLWIFI=y
+CONFIG_RTLWIFI_USB=y
+CONFIG_RTL8192C_COMMON=y
+# CONFIG_RTL8XXXU is not set
+```
+
+The RTL8188CU rev A loads `rtlwifi/rtl8192cufw_TMSC.bin`. On `rtl8xxxu`, a near-AP 19-ping comparison averaged 472.282 ms (max 1707.050 ms); with `rtl8192cu` at the original position, 30 pings averaged 5.811 ms (max 12.322 ms) and 300 pings averaged 9.315 ms (max 502.740 ms), all with zero loss. PHY bitrate is not throughput. Keep the previous kernel as a fallback.
+
+The current network initramfs includes ARMHF `/usr/sbin/iw`, `/usr/bin/evtest`, their libraries, and a locally compiled `/usr/sbin/casper-power-button` daemon. `/init` launches it in the background. The daemon observes `KEY_POWER` release on `/dev/input/event0` and runs `/casper-shutdown.sh` for clean monitor termination, SD sync/unmount and kernel poweroff. Successful shutdown and button-based boot were tested.
+
+To prevent `umount /mnt/sd` from returning `EBUSY`, Dropbear must not inherit `/mnt/sd/casper-boot.log` descriptors from the parent script. The tested invocation adds `</dev/null >/dev/null 2>&1` to the Dropbear command. Local NTP now targets `192.168.98.32`.
+
+The built initramfs includes local credentials and must not be committed to the public repository.
