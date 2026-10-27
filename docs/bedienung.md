@@ -34,6 +34,8 @@ Ein angeschlossener PC ist dafür nicht erforderlich. **SSH ist inzwischen erfol
 | `boot.scr` | von U-Boot ausgeführtes Startskript |
 | `wlan.conf` | Lokale WPA2/WLAN-Konfiguration; wird durch das Netzwerk-Startskript gelesen; **niemals veröffentlichen** |
 | `casper-boot.log` | Vom Netzwerk-Startskript auf die SD geschriebene Diagnose |
+| `casper-power.csv` | Messprotokoll für Akku und USB-Versorgung; Prototyp erfolgreich getestet |
+| `casper-ntp.log` | NTP-Diagnose des Power-Service-Prototyps |
 
 Im Linux-System wurde `/init` so eingerichtet, dass `proc`, `sysfs` und `devtmpfs` gemountet werden. Anschließend startet eine Konsole:
 
@@ -97,6 +99,30 @@ iw dev wlan0 station dump
 ```
 
 Gemessen: `Power save: off`, −79 dBm, RX 13 Mbit/s, TX 72,2 Mbit/s, Kanal 6 bei 2437 MHz. Zum nächsten Test Tablet näher an den AP bringen, drehen und parallel vom Windows-Rechner `ping -n 50 192.168.98.36` ausführen. Die Datei `/proc/net/wireless` existiert in der aktuellen Kernelkonfiguration nicht; `iw` liefert die relevanten Werte.
+
+## Akku, NTP und Power Monitor
+
+Der getestete Kernel stellt `/sys/class/power_supply/axp20x-battery` und `axp20x-usb` bereit. Die Werte in `voltage_now` bzw. `current_now` sind **Mikrovolt/Mikroampere**. Zum Nachsehen:
+
+```sh
+for p in /sys/class/power_supply/*; do
+  echo "=== ${p##*/} ==="
+  for f in type status capacity voltage_now current_now online; do
+    [ -r "$p/$f" ] && echo "$f: $(cat "$p/$f")"
+  done
+done
+```
+
+Lade- und Entladezustände wurden bestätigt, ebenso das Schreiben von Messungen nach `/mnt/sd/casper-power.csv`. BusyBox-NTP stellte nach manuellem Start von `/power-services.sh` die korrekte UTC-Zeit her. **Autostart ist noch nicht abschließend getestet:** In einem Boot hatten `/power-services.sh` und `/casper-power-monitor.sh` versehentlich nur Rechte `0644`; nach `chmod 755` funktionierte der manuelle Test. Die Rechte müssen in der WSL-Quelldatei korrigiert und ein neues initramfs gebootet werden. Siehe [ausführliche Dokumentation](power-management.md).
+
+```sh
+date -u
+cat /mnt/sd/casper-ntp.log
+tail -5 /mnt/sd/casper-power.csv
+ps | grep casper-power
+```
+
+Noch **keine automatische Abschaltung** bei niedrigem Akku aktiviert; Prozentanzeige ist nicht ausreichend kalibriert.
 
 ## Versions- und Diagnosebefehle
 
