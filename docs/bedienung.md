@@ -11,6 +11,7 @@ Allwinner A13 Boot-ROM
   → Linux 6.12.0
   → BusyBox 1.37.0 initramfs
   → sichtbare Shell: ~ #
+  → internes Realtek-WLAN / WPA2 / DHCP / Dropbear SSH
 ```
 
 Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Die Eingabe über eine externe Tastatur und die spätere Touchbedienung sind noch **nicht** bestätigt.
@@ -21,7 +22,7 @@ Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Die E
 2. Tablet einschalten; im Test war alternativ ein Neustart über die Reset-Öffnung möglich.
 3. Nach U-Boot und Kernelmeldungen erscheint die BusyBox-Shell `~ #`.
 
-Ein angeschlossener PC ist dafür nicht erforderlich. Ohne funktionierende USB-Tastatur, Touch-Treiber oder SSH kann man die Shell zunächst **nur sehen**.
+Ein angeschlossener PC ist dafür nicht erforderlich. **SSH ist inzwischen erfolgreich getestet**: Die Shell ist per Netzwerk erreichbar; externe Tastatur und Touchbedienung bleiben offen.
 
 ## Dateien und Rollen
 
@@ -31,7 +32,8 @@ Ein angeschlossener PC ist dafür nicht erforderlich. Ohne funktionierende USB-T
 | `sun5i-a13-q8-tablet.dtb` | Hardwarebeschreibung (Device Tree) |
 | `initramfs.cpio.gz` | Minimal-Linux mit BusyBox und `/init` |
 | `boot.scr` | von U-Boot ausgeführtes Startskript |
-| `wlan.conf` (geplant) | Lokale WPA/WLAN-Konfiguration; wird aktuell noch nicht automatisch verwendet |
+| `wlan.conf` | Lokale WPA2/WLAN-Konfiguration; wird durch das Netzwerk-Startskript gelesen; **niemals veröffentlichen** |
+| `casper-boot.log` | Vom Netzwerk-Startskript auf die SD geschriebene Diagnose |
 
 Im Linux-System wurde `/init` so eingerichtet, dass `proc`, `sysfs` und `devtmpfs` gemountet werden. Anschließend startet eine Konsole:
 
@@ -42,11 +44,11 @@ exec setsid cttyhack /bin/sh </dev/console >/dev/console 2>&1
 ## Was aktuell noch nicht geht
 
 - **USB-Tastatur:** Tablet hat nur eine Mini-USB-Buchse. Ein **Mini-USB-OTG-Hostadapter** wird für eine normale USB-Tastatur benötigt. MUSB/HID sind konfiguriert; Device Tree und echter Hostbetrieb müssen noch getestet werden.
-- **WLAN:** Interner Realtek-USB-Adapter `0bda:8176` wurde unter Android ermittelt. `CONFIG_RTL8XXXU=y` wurde in der **neuen** Kernel-Konfiguration bestätigt; erfolgreiche Verbindung unter Linux steht noch aus.
-- **SSH:** Dropbear, WLAN-Authentifizierung, DHCP, Boot-Autostart und Schlüsselverwaltung sind noch nicht eingerichtet.
+- **WLAN:** Funktioniert, aber Empfang und Latenz sind derzeit schlecht (−79 dBm bei ca. 5 m und einer Wand; RX 13 Mbit/s, starke Ping-Ausreißer).
+- **SSH:** Funktioniert per Dropbear/Public-Key. Passwortanmeldung ist deaktiviert; korrektes Eigentum von `/root` ist entscheidend.
 - **Touchscreen/Grafik:** Goodix GT811 ist identifiziert, aber noch nicht in Betrieb.
 
-## WLAN-Konfiguration (Vorbereitung, noch nicht aktiv)
+## WLAN-Konfiguration (aktiv)
 
 Später ist eine lokale Datei `wlan.conf` auf der SD vorgesehen, beispielsweise für ein WPA2-Personal-Netz:
 
@@ -62,9 +64,9 @@ network={
 }
 ```
 
-**Nicht nach GitHub hochladen.** Diese Datei enthält das Passwort im Klartext. Sie ist **noch keine funktionsfähige Autokonfiguration**: Dazu müssen Linux den WLAN-Adapter erkennen, Firmware (falls nötig), `wpa_supplicant`, DHCP und unser Startskript erst korrekt integriert werden.
+**Nicht nach GitHub hochladen.** Diese Datei enthält das Passwort im Klartext. Die Netzwerkvariante des initramfs liest sie beim Start von der microSD und startet `wpa_supplicant`, `udhcpc` und Dropbear.
 
-Geplante Startlogik nach Validierung des WLAN-Interfaces (Name `wlan0` nur beispielhaft):
+Vereinfachte Startlogik der getesteten Netzwerkvariante (`wlan0` wurde bestätigt):
 
 ```sh
 mkdir -p /mnt/sd /var/run/wpa_supplicant
@@ -74,9 +76,29 @@ wpa_supplicant -B -i wlan0 -c /mnt/sd/wlan.conf
 udhcpc -i wlan0
 ```
 
-Die `ip`- und `wpa_supplicant`-Programme müssen im initramfs tatsächlich verfügbar sein; der derzeitige BusyBox-Aufbau garantiert das nicht.
+Die tatsächlich verwendete Netzwerkvariante bringt `wpa_supplicant` und DHCP-Skripte samt ARMHF-Laufzeitbibliotheken mit. Die ursprüngliche Minimalvariante `initramfs/` ist davon zu unterscheiden.
 
-## Versions- und Diagnosebefehle (sobald Eingabe möglich)
+## SSH-Zugang und WLAN-Diagnose
+
+Unter Windows (privaten Schlüsselpfad anpassen, Tablet-IP aus DHCP-Leases entnehmen):
+
+```powershell
+ssh -i "$env:USERPROFILE\.ssh\casper_a13" -o IdentitiesOnly=yes root@192.168.98.36
+```
+
+Die Adresse war die im Test vergebene DHCP-Adresse; sie kann sich ändern. Bei `Permission denied (publickey)` zunächst passenden öffentlichen Schlüssel in `/root/.ssh/authorized_keys` kontrollieren sowie **UID/GID 0** für `/root` und `/root/.ssh` und die Modi `0700` bzw. `0600` prüfen. Der öffentliche Kommentar `casper-a13` ist kein Hostname.
+
+Für die WLAN-Analyse wurde `iw` **temporär per SSH** auf das laufende RAM-System übertragen. Verfügbare Befehle, sofern `iw` vorhanden ist:
+
+```sh
+iw dev wlan0 get power_save
+iw dev wlan0 link
+iw dev wlan0 station dump
+```
+
+Gemessen: `Power save: off`, −79 dBm, RX 13 Mbit/s, TX 72,2 Mbit/s, Kanal 6 bei 2437 MHz. Zum nächsten Test Tablet näher an den AP bringen, drehen und parallel vom Windows-Rechner `ping -n 50 192.168.98.36` ausführen. Die Datei `/proc/net/wireless` existiert in der aktuellen Kernelkonfiguration nicht; `iw` liefert die relevanten Werte.
+
+## Versions- und Diagnosebefehle
 
 ```sh
 uname -a
@@ -86,7 +108,7 @@ dmesg | tail -50
 ls /sys/bus/usb/devices
 ```
 
-Nach erfolgreich eingebauter WLAN-Unterstützung zusätzlich:
+Für die funktionierende WLAN-Konfiguration zusätzlich:
 
 ```sh
 cat /proc/net/dev
