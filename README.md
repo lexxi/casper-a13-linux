@@ -2,7 +2,7 @@
 
 Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot and BusyBox, booted **from microSD without modifying the original Android NAND**.
 
-> **Status (2026-10-27):** U-Boot 2025.01 → Linux 6.12.0 → BusyBox boots autonomously from microSD. **Internal Realtek Wi-Fi, WPA2, DHCP and SSH with public-key authentication are confirmed working.** WLAN latency/performance needs investigation; touchscreen and external USB keyboard remain pending.
+> **Status (2026-10-27):** U-Boot 2025.01 → Linux 6.12.0 → BusyBox boots autonomously from microSD. **Internal Realtek Wi-Fi, WPA2, DHCP and SSH with public-key authentication are confirmed working.** AXP209 battery/USB measurements and one-shot NTP plus CSV power monitoring are also tested. WLAN latency/performance, autonomous monitoring after reboot, touchscreen and external USB keyboard remain pending.
 
 ## Hardware
 
@@ -31,13 +31,15 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 7. Enabled AXP209 USB power-supply support (`CONFIG_AXP20X_POWER=y`) to fix USB PHY deferred probing; EHCI enumerates the internal `0bda:8176` adapter.
 8. Enabled `CONFIG_RTL8XXXU_UNTESTED=y` to bind RTL8188CU (`0bda:8176`); loaded `rtlwifi/rtl8192cufw_TMSC.bin` successfully.
 9. Confirmed WPA2 association, DHCP lease, and Dropbear SSH login as root via an authorized ED25519 public key.
+10. Enabled AXP209 battery/ADC and power-key kernel support; confirmed charging/discharging readings and a working CSV power-monitor prototype.
+11. Verified BusyBox NTP synchronization and logging after manual launch; persistent autostart still needs a reboot test.
 
 ## Einrichtung und Bedienung
 
 - **[Windows und WSL2 installieren und verwenden](docs/wsl-setup.md)** — Ubuntu, Cross-Compiler, Windows/WSL-Dateizugriff und FEL per USB.
 - **[Casper starten und bedienen](docs/bedienung.md)** — SD-Boot, Bootdateien, aktuelle Eingabemöglichkeiten und Diagnose.
 - **[Kernel, U-Boot und BusyBox bauen](docs/build-and-boot.md)** — dokumentierte Build- und Bootschritte.
-- [Hardwaredetails](docs/hardware.md) und [Entwicklungsfahrplan](docs/roadmap.md).
+- [Hardwaredetails](docs/hardware.md), [AXP209-Akku, NTP und Power Monitor](docs/power-management.md) und [Entwicklungsfahrplan](docs/roadmap.md).
 
 **Achtung:** Die SD-Bootloader-Installation kann bei Wahl des falschen Datenträgers Daten zerstören. Unsere Dokumentation enthält keine blind ausführbare Rohdatenträger-Flash-Anweisung.
 
@@ -56,6 +58,9 @@ The actual sources and build artifacts are maintained in WSL Ubuntu under `~/cas
 The upstream Linux, U-Boot and BusyBox source trees are **not vendored** into this documentation repository.
 
 ## Current priorities
+
+- Verify the executable bits and **reboot-time autostart** of NTP and the power monitor; avoid duplicate log writers.
+- Validate battery measurements, USB cable voltage drop and safe shutdown / AXP209 power-button handling.
 
 - Diagnose poor Wi-Fi reception and severe ping jitter (measured approximately **−79 dBm**, RX link rate **13 Mbit/s**, at about 5 m with one wall); compare close to access point and tablet orientation.
 - Compare `rtl8xxxu` to alternative `rtl8192cu` only if reception tests do not explain the issue.
