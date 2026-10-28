@@ -20,8 +20,10 @@ Updated 2026-10-28.
 | Power monitor CSV | **Working at boot** | 300-second `/mnt/sd/casper-power.csv` monitor |
 | Safe shutdown / persistent storage | **Working** | Monitor stops, FAT32 sync/unmount succeeds, poweroff and restart tested |
 | Wi-Fi latency / reception | **Improved** | With `rtl8192cu`, 30 pings avg 5.811 ms/max 12.322 ms; 300 pings avg 9.315 ms/max 502.740 ms, 0% loss |
-| Goodix GT811 touch | **Working at boot** | Original Casper 108-byte panel config written over I²C-1 (`0x5d`); uinput exposes `/dev/input/event1`; `evtest` confirmed movement, press and release after reboot; corner calibration remains |
-| Graphical touch UI | **Pending** | First DRM/KMS 800×480 touch test; calibrate orientation and filter occasional outlier |
+| Goodix GT811 touch | **Working at boot (IRQ)** | PB3 wakeup, original 108-byte I²C config, PG11 falling-edge IRQ userspace bridge with post-read ACK; evdev confirms press/move/release after cold boot |
+| Graphical touch diagnostic | **Working locally** | 800×480, 32-bpp `/dev/fb0` grid/crosshair, input from `event1`; X correction in test app; bottom-left coordinate display (X≈8–788, Y≈4–472 at edges). Local source not yet published |
+| Permanent coordinate conversion | **Pending** | Fix centrally in driver; rebuilt experimental IRQ variant crashed with `Bus error`, so boot image remains known-good |
+| Complete graphical application/UI | **Pending** | Diagnostic crosshair is not a full app shell or desktop environment |
 | Second tablet | **Repair separate** | Deep-discharged battery; no Linux boot yet |
 
 ## Why Wi-Fi before keyboard?
@@ -36,6 +38,6 @@ Power key `axp20x-pek` exposes `/dev/input/event0`, `KEY_POWER` code 116. An ARM
 
 Initial unmount `EBUSY` was caused by Dropbear inheriting `casper-boot.log` descriptors. Redirecting its standard streams to `/dev/null` resolved the problem.
 
-On 2026-10-28, kernel #10 enabled `CONFIG_INPUT_UINPUT=y`. The original Android `gt811_ts_icon.ko` supplied the verified panel initialization payload (106 config bytes plus the 2-byte register address `0x06A2`, kept private). At boot, `/gt811-start.sh` initializes the controller and launches `gt811-uinput`, which polls every 20 ms. `evtest` verified ABS_X, ABS_Y and BTN_TOUCH after reboot. A brief outlier to (800,0) was seen during one touch sequence; calibration and filtering remain open.
+On 2026-10-28, kernel #10 enabled `CONFIG_INPUT_UINPUT=y`. The original Android `gt811_ts_icon.ko` supplied a panel initialization payload (106 config bytes plus the two-byte register address `0x06A2`, kept private). The revised `/gt811-start.sh` executes PB3 wakeup and panel init, then starts `gt811-uinput --irq` on PG11 with the Android-style `80 00` report ACK. Cold-boot and evdev finger events were confirmed. A standalone `/dev/fb0` grid/crosshair app was built and tested; with X corrected in the app and displayed Y inverted, finger tracking and observed edge coordinates were good (left/right X 8/788, bottom/top Y 4/472). A separately rebuilt X-fixed IRQ driver later reported `Bus error`; root cause still unknown. A historical isolated coordinate outlier to (800,0) remains worth monitoring.
 
-Remaining: battery/USB voltage validation, shutdown failure recovery, regulatory database, touch calibration and graphical UI. Original Android NAND remains untouched.
+Remaining: battery/USB voltage validation, shutdown failure recovery, regulatory database, investigation of experimental GT811 `Bus error`, stable driver-side orientation fix, and full graphical UI. Original Android NAND remains untouched.
