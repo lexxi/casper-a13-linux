@@ -1,6 +1,6 @@
 # Roadmap and evidence
 
-Updated 2026-10-27.
+Updated 2026-10-28.
 
 | Feature | Status | Evidence / next step |
 | --- | --- | --- |
@@ -20,8 +20,8 @@ Updated 2026-10-27.
 | Power monitor CSV | **Working at boot** | 300-second `/mnt/sd/casper-power.csv` monitor |
 | Safe shutdown / persistent storage | **Working** | Monitor stops, FAT32 sync/unmount succeeds, poweroff and restart tested |
 | Wi-Fi latency / reception | **Improved** | With `rtl8192cu`, 30 pings avg 5.811 ms/max 12.322 ms; 300 pings avg 9.315 ms/max 502.740 ms, 0% loss |
-| Goodix GT811 touch | **Pending** | Review I²C/pin config, DT integration |
-| Graphical touch UI | **Pending** | Choose small offline UI / terminal |
+| Goodix GT811 touch | **Working at boot** | Original Casper 108-byte panel config written over I²C-1 (`0x5d`); uinput exposes `/dev/input/event1`; `evtest` confirmed movement, press and release after reboot; corner calibration remains |
+| Graphical touch UI | **Pending** | First DRM/KMS 800×480 touch test; calibrate orientation and filter occasional outlier |
 | Second tablet | **Repair separate** | Deep-discharged battery; no Linux boot yet |
 
 ## Why Wi-Fi before keyboard?
@@ -36,4 +36,6 @@ Power key `axp20x-pek` exposes `/dev/input/event0`, `KEY_POWER` code 116. An ARM
 
 Initial unmount `EBUSY` was caused by Dropbear inheriting `casper-boot.log` descriptors. Redirecting its standard streams to `/dev/null` resolved the problem.
 
-Remaining: battery/USB voltage validation, shutdown failure recovery, regulatory database, touchscreen and graphical UI. Original Android NAND remains untouched.
+On 2026-10-28, kernel #10 enabled `CONFIG_INPUT_UINPUT=y`. The original Android `gt811_ts_icon.ko` supplied the verified panel initialization payload (106 config bytes plus the 2-byte register address `0x06A2`, kept private). At boot, `/gt811-start.sh` initializes the controller and launches `gt811-uinput`, which polls every 20 ms. `evtest` verified ABS_X, ABS_Y and BTN_TOUCH after reboot. A brief outlier to (800,0) was seen during one touch sequence; calibration and filtering remain open.
+
+Remaining: battery/USB voltage validation, shutdown failure recovery, regulatory database, touch calibration and graphical UI. Original Android NAND remains untouched.
