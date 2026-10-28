@@ -14,7 +14,7 @@ Allwinner A13 Boot-ROM
   → internes Realtek-WLAN / WPA2 / DHCP / Dropbear SSH
 ```
 
-Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Die Eingabe über eine externe Tastatur und die spätere Touchbedienung sind noch **nicht** bestätigt.
+Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Seit Kernel #10 ist außerdem der Goodix-GT811-Touchscreen über einen automatisch gestarteten Userspace-uinput-Treiber als Linux-Eingabegerät nutzbar. Eine grafische Oberfläche existiert noch nicht; die Shell selbst ist nicht durch Touch bedienbar. Eine externe USB-Tastatur bleibt ungetestet.
 
 ## Start
 
@@ -22,7 +22,7 @@ Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Die E
 2. Tablet einschalten; im Test war alternativ ein Neustart über die Reset-Öffnung möglich.
 3. Nach U-Boot und Kernelmeldungen erscheint die BusyBox-Shell `~ #`.
 
-Ein angeschlossener PC ist dafür nicht erforderlich. **SSH ist inzwischen erfolgreich getestet**: Die Shell ist per Netzwerk erreichbar; externe Tastatur und Touchbedienung bleiben offen.
+Ein angeschlossener PC ist dafür nicht erforderlich. **SSH ist erfolgreich getestet**; die Touch-Ereignisse werden nach dem Boot automatisch unter `/dev/input/event1` bereitgestellt. Externe USB-Tastatur noch ungetestet.
 
 ## Dateien und Rollen
 
@@ -46,9 +46,19 @@ exec setsid cttyhack /bin/sh </dev/console >/dev/console 2>&1
 ## Was aktuell noch nicht geht
 
 - **USB-Tastatur:** Tablet hat nur eine Mini-USB-Buchse. Ein **Mini-USB-OTG-Hostadapter** wird für eine normale USB-Tastatur benötigt. MUSB/HID sind konfiguriert; Device Tree und echter Hostbetrieb müssen noch getestet werden.
-- **WLAN:** Funktioniert, aber Empfang und Latenz sind derzeit schlecht (−79 dBm bei ca. 5 m und einer Wand; RX 13 Mbit/s, starke Ping-Ausreißer).
+- **WLAN:** Funktioniert mit dem integrierten `rtl8192cu` deutlich besser als mit `rtl8xxxu`; gelegentliche Latenzausreißer bleiben.
 - **SSH:** Funktioniert per Dropbear/Public-Key. Passwortanmeldung ist deaktiviert; korrektes Eigentum von `/root` ist entscheidend.
-- **Touchscreen/Grafik:** Goodix GT811 ist identifiziert, aber noch nicht in Betrieb.
+- **Touchscreen/Grafik:** GT811-Ein-Finger-Input funktioniert und startet automatisch. Touch-Ausrichtung an vier Ecken und grafische Oberfläche sind noch offen.
+
+## Goodix GT811: Touch nach dem Boot prüfen
+
+```sh
+cat /tmp/gt811.log
+cat /proc/bus/input/devices
+evtest /dev/input/event1
+```
+
+Erwartet: `Casper Goodix GT811 Touchscreen`, `BTN_TOUCH` (330) und `ABS_X` (0–800) / `ABS_Y` (0–480). `evtest` zeigt auch Fingerbewegungen und Loslassen nach einem vollständigen Reboot. Zur Initialisierung verwendet das lokale Initramfs `/gt811-start.sh`, `/usr/sbin/gt811-init-test`, `/usr/sbin/gt811-uinput` und `/etc/gt811/config.bin`. Die originale Konfiguration und das Android-Modul gehören **nicht** in dieses öffentliche Repository. Details: [GT811 Touchscreen](gt811-touchscreen.md).
 
 ## WLAN-Konfiguration (aktiv)
 
