@@ -2,7 +2,7 @@
 
 Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot and BusyBox, booted **from microSD without modifying the original Android NAND**.
 
-> **Status (2026-10-27):** Linux 6.12 boots from microSD with original NAND untouched. RTL8188CU Wi-Fi is now stable with built-in `rtl8192cu` (replacing high-latency `rtl8xxxu`). Dropbear SSH, local NTP `192.168.98.32`, automatic AXP209 battery monitoring, and safe power-button shutdown with FAT32 unmount are boot-tested.
+> **Status (2026-10-28):** Linux 6.12.0 kernel #10 boots from microSD without changing Android NAND. Native 800×480 DRM/LCD output, fast `rtl8192cu` WLAN, Dropbear SSH, AXP209 battery monitoring and safe power-button shutdown work. The original Goodix GT811 touch panel is now initialized automatically at boot and generates verified Linux evdev events via `/dev/uinput`.
 
 ## Hardware
 
@@ -11,8 +11,8 @@ Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot
 | Tablet | Casper / INTREEO TAB-WB72 |
 | SoC | Allwinner A13 (sun5i), ARM Cortex-A8 |
 | RAM | 512 MiB DDR3 |
-| Display | 800 × 480 RGB LCD; Linux framebuffer/console output works |
-| Touch panel | Goodix GT811 (integration pending) |
+| Display | 800 × 480 RGB LCD; native Linux DRM/LCD console works |
+| Touch panel | Goodix GT811 (`0x5d` on I²C-1), single-touch via userspace uinput (boot-tested) |
 | Wi-Fi | Realtek USB device **0bda:8176**, 802.11n WLAN Adapter (RTL8188CUS family) |
 | USB connector | One **Mini-USB** port, OTG-capable; separate host port not present |
 | Internal storage | ~4 GB NAND containing original Android 4.0.4 |
@@ -35,13 +35,15 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 11. Confirmed automatic local NTP synchronization and CSV battery monitoring after reboot.
 12. Confirmed AXP209 `KEY_POWER` input, autostarted ARMHF power-button daemon and successful safe shutdown (monitor stop, sync, FAT32 unmount, poweroff), followed by reboot using the power button.
 13. Fixed Dropbear inheriting the SD boot-log file descriptors, which had initially blocked FAT32 unmount.
+14. Enabled `CONFIG_INPUT_UINPUT=y` in kernel #10; identified the original Goodix GT811 panel at I²C-1 address `0x5d` and extracted its 108-byte panel configuration from the original Android module, keeping proprietary artifacts local.
+15. Implemented GT811 panel initialization and a userspace I²C-to-uinput single-touch bridge; verified `BTN_TOUCH`, `ABS_X` and `ABS_Y` on `/dev/input/event1` after a complete reboot, with both processes automatically started from the initramfs.
 
 ## Einrichtung und Bedienung
 
 - **[Windows und WSL2 installieren und verwenden](docs/wsl-setup.md)** — Ubuntu, Cross-Compiler, Windows/WSL-Dateizugriff und FEL per USB.
 - **[Casper starten und bedienen](docs/bedienung.md)** — SD-Boot, Bootdateien, aktuelle Eingabemöglichkeiten und Diagnose.
 - **[Kernel, U-Boot und BusyBox bauen](docs/build-and-boot.md)** — dokumentierte Build- und Bootschritte.
-- [Hardwaredetails](docs/hardware.md), [AXP209-Akku, NTP und Power Monitor](docs/power-management.md) und [Entwicklungsfahrplan](docs/roadmap.md).
+- [Hardwaredetails](docs/hardware.md), [GT811 Touchscreen](docs/gt811-touchscreen.md), [AXP209-Akku, NTP und Power Monitor](docs/power-management.md) und [Entwicklungsfahrplan](docs/roadmap.md).
 
 **Achtung:** Die SD-Bootloader-Installation kann bei Wahl des falschen Datenträgers Daten zerstören. Unsere Dokumentation enthält keine blind ausführbare Rohdatenträger-Flash-Anweisung.
 
@@ -56,6 +58,7 @@ The actual sources and build artifacts are maintained in WSL Ubuntu under `~/cas
 - `initramfs-network/` and `initramfs-network.cpio.gz` — local network/Dropbear development variant (contains secrets; **do not publish**)
 - `boot-linux.cmd` — U-Boot script source
 - `casper_original.fex` — hardware dump from the original device (**local only; not distributed here**)
+- `gt811/` — local GT811 driver sources, tools, original Android module and panel config (**do not publish the original module, config or extracted firmware**)
 
 The upstream Linux, U-Boot and BusyBox source trees are **not vendored** into this documentation repository.
 
@@ -64,7 +67,7 @@ The upstream Linux, U-Boot and BusyBox source trees are **not vendored** into th
 - Preserve the working `rtl8192cu` kernel and initramfs locally; keep the older `rtl8xxxu` kernel as fallback.
 - WLAN baseline: 30 pings at original position, 0% loss, 2.388/5.811/12.322 ms min/avg/max; 300 pings, 0% loss, 2.148/9.315/502.740 ms (occasional jitter remains).
 - Validate battery readings and USB input voltage under load.
-- Goodix GT811 touch and lightweight 800×480 UI remain next milestones.
+- GT811 single-touch now works after reboot. Next: corner/orientation calibration, investigate sporadic coordinate outliers, and build a lightweight 800×480 DRM touch UI.
 
 See [roadmap](docs/roadmap.md) and [operation guide](docs/bedienung.md).
 
