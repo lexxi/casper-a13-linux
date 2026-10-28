@@ -2,7 +2,7 @@
 
 Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot and BusyBox, booted **from microSD without modifying the original Android NAND**.
 
-> **Status (2026-10-28):** Linux 6.12.0 kernel #10 boots from microSD without changing Android NAND. Native 800×480 DRM/LCD output, fast `rtl8192cu` WLAN, Dropbear SSH, AXP209 battery monitoring and safe power-button shutdown work. The original Goodix GT811 touch panel is now initialized automatically at boot and generates verified Linux evdev events via `/dev/uinput`.
+> **Status (2026-10-28):** Linux 6.12.0 kernel #10 boots from microSD without changing Android NAND. Native 800×480 DRM/LCD output, fast `rtl8192cu` WLAN, Dropbear SSH, AXP209 battery monitoring and safe power-button shutdown work. The original Goodix GT811 touch panel is initialized automatically at boot using PB3 wakeup, original panel settings and a PG11 falling-edge IRQ userspace bridge; finger presses, releases and movement are verified via Linux evdev. A standalone 800×480 framebuffer touch test also runs. Coordinate display is calibrated for origin at bottom-left; permanent driver-side X correction and a crash investigation remain open.
 
 ## Hardware
 
@@ -36,7 +36,9 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 12. Confirmed AXP209 `KEY_POWER` input, autostarted ARMHF power-button daemon and successful safe shutdown (monitor stop, sync, FAT32 unmount, poweroff), followed by reboot using the power button.
 13. Fixed Dropbear inheriting the SD boot-log file descriptors, which had initially blocked FAT32 unmount.
 14. Enabled `CONFIG_INPUT_UINPUT=y` in kernel #10; identified the original Goodix GT811 panel at I²C-1 address `0x5d` and extracted its 108-byte panel configuration from the original Android module, keeping proprietary artifacts local.
-15. Implemented GT811 panel initialization and a userspace I²C-to-uinput single-touch bridge; verified `BTN_TOUCH`, `ABS_X` and `ABS_Y` on `/dev/input/event1` after a complete reboot, with both processes automatically started from the initramfs.
+15. Implemented GT811 panel initialization and a userspace I²C-to-uinput single-touch bridge; verified `BTN_TOUCH`, `ABS_X` and `ABS_Y` on `/dev/input/event1` after a complete reboot, with automatic startup from the initramfs.
+16. Reconstructed the Android GT811 end-of-report ACK (`80 00`), tested PG11 falling-edge interrupt handling, and boot-tested the automatic PB3 wakeup → 108-byte panel configuration → IRQ driver sequence.
+17. Tested a standalone 800×480 32-bpp `/dev/fb0` touch crosshair (no X11/Wayland). Corrected X presentation horizontally and displayed Y with bottom-left origin. Edge readings: left X≈8, right X≈788, bottom Y≈4, top Y≈472. Changes are currently in the diagnostic UI, **not yet validated as a production driver fix**.
 
 ## Einrichtung und Bedienung
 
@@ -67,7 +69,7 @@ The upstream Linux, U-Boot and BusyBox source trees are **not vendored** into th
 - Preserve the working `rtl8192cu` kernel and initramfs locally; keep the older `rtl8xxxu` kernel as fallback.
 - WLAN baseline: 30 pings at original position, 0% loss, 2.388/5.811/12.322 ms min/avg/max; 300 pings, 0% loss, 2.148/9.315/502.740 ms (occasional jitter remains).
 - Validate battery readings and USB input voltage under load.
-- GT811 single-touch now works after reboot. Next: corner/orientation calibration, investigate sporadic coordinate outliers, and build a lightweight 800×480 DRM touch UI.
+- GT811 single-touch works after reboot in IRQ mode, and a minimal framebuffer crosshair follows the finger. Next: fix the X coordinate centrally in the driver without double inversion; investigate a `Bus error` seen in an experimental rebuilt IRQ driver; preserve known-good image; optionally package the standalone diagnostic framebuffer tool. A complete GUI is not installed.
 
 See [roadmap](docs/roadmap.md) and [operation guide](docs/bedienung.md).
 
