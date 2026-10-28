@@ -6,7 +6,7 @@
 - **SoC:** Allwinner A13 / sun5i, ARM Cortex-A8
 - **RAM:** 512 MiB DDR3
 - **Display:** 800 × 480; LCD console output confirmed under Linux
-- **Touchscreen:** Goodix GT811; not yet enabled in the Linux image
+- **Touchscreen:** Goodix GT811; working via I²C/uinput in Linux kernel #10, with automatic boot initialization
 - **Storage:** ~4 GB internal NAND; microSD boot successfully tested
 - **Connector:** one Mini-USB, used previously for ADB and FEL; an OTG adapter is needed to test an external keyboard
 - **Wi-Fi:** USB device at `/sys/bus/usb/devices/2-1` under original Android:
@@ -17,6 +17,15 @@
   - Reception in first field test approximately **−79 dBm** at 5 m / one wall; RX link rate 13 Mbit/s, substantial latency spikes; under investigation
   - Realtek **RTL8188CU rev A (TSMC)**, 1T1R, MAC observed locally; `rtl8xxxu` **tested working** with `CONFIG_RTL8XXXU_UNTESTED=y` and firmware `rtlwifi/rtl8192cufw_TMSC.bin`
   - `rtl8150` in the Android modules listing is an Ethernet driver and not identification of the Wi-Fi module
+
+## GT811 touchscreen details (verified 2026-10-28)
+
+- I²C bus `/dev/i2c-1`, slave address `0x5d`, chip ID `0x11` at register `0x0715`.
+- Original Android `init.sun5i.rc` loads `gt811_ts_icon.ko` from `/system/vendor/modules`.
+- Original FEX identifies `ctp_name=gt811_ts`, `ctp_twi_id=1`, `ctp_twi_addr=0x5d`, interrupt `PG11` and wake/reset `PB03`, with X/Y swap and Y inversion settings.
+- Controller initialization: 2-byte register address `0x06A2` + 106 config bytes (108 bytes total), extracted from the device's original Android module. Do not distribute extracted module or configuration.
+- Linux uses a small ARMHF userspace I²C-to-uinput bridge; `/dev/input/event1` reports single-touch `BTN_TOUCH`, `ABS_X` (0–800), `ABS_Y` (0–480).
+- See [touchscreen documentation](gt811-touchscreen.md); coordinate calibration and IRQ-based reading remain future work.
 
 ## Original Android hardware data
 
