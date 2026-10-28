@@ -14,7 +14,7 @@ Allwinner A13 Boot-ROM
   → internes Realtek-WLAN / WPA2 / DHCP / Dropbear SSH
 ```
 
-Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Seit Kernel #10 ist außerdem der Goodix-GT811-Touchscreen über einen automatisch gestarteten Userspace-uinput-Treiber als Linux-Eingabegerät nutzbar. Eine grafische Oberfläche existiert noch nicht; die Shell selbst ist nicht durch Touch bedienbar. Eine externe USB-Tastatur bleibt ungetestet.
+Der Bildschirm zeigt den Linux-Boot und die Shell. Das ist **bestätigt**. Seit Kernel #10 ist außerdem der Goodix-GT811-Touchscreen über einen automatisch gestarteten Userspace-uinput-Treiber als Linux-Eingabegerät nutzbar. Ein eigenständiger grafischer 800×480-Framebuffer-Touch-Test (Raster und Fadenkreuz) wurde über SSH aus `/tmp` erfolgreich gestartet. Eine dauerhaft installierte grafische Oberfläche existiert noch nicht; die Shell selbst ist nicht durch Touch bedienbar. Eine externe USB-Tastatur bleibt ungetestet.
 
 ## Start
 
@@ -48,7 +48,7 @@ exec setsid cttyhack /bin/sh </dev/console >/dev/console 2>&1
 - **USB-Tastatur:** Tablet hat nur eine Mini-USB-Buchse. Ein **Mini-USB-OTG-Hostadapter** wird für eine normale USB-Tastatur benötigt. MUSB/HID sind konfiguriert; Device Tree und echter Hostbetrieb müssen noch getestet werden.
 - **WLAN:** Funktioniert mit dem integrierten `rtl8192cu` deutlich besser als mit `rtl8xxxu`; gelegentliche Latenzausreißer bleiben.
 - **SSH:** Funktioniert per Dropbear/Public-Key. Passwortanmeldung ist deaktiviert; korrektes Eigentum von `/root` ist entscheidend.
-- **Touchscreen/Grafik:** GT811-Ein-Finger-Input funktioniert und startet automatisch. Touch-Ausrichtung an vier Ecken und grafische Oberfläche sind noch offen.
+- **Touchscreen/Grafik:** GT811-Ein-Finger-Input startet automatisch mit PB3-Wakeup, Panelinitialisierung und PG11-IRQ. Ein grafischer Framebuffer-Test ist lokal erfolgreich; die X-Spiegelung erfolgt derzeit nur im Diagnoseprogramm, die dauerhafte Treiberkorrektur ist noch offen. Die experimentelle neue Treiberversion zeigte einen `Bus error`.
 
 ## Goodix GT811: Touch nach dem Boot prüfen
 
@@ -58,7 +58,9 @@ cat /proc/bus/input/devices
 evtest /dev/input/event1
 ```
 
-Erwartet: `Casper Goodix GT811 Touchscreen`, `BTN_TOUCH` (330) und `ABS_X` (0–800) / `ABS_Y` (0–480). `evtest` zeigt auch Fingerbewegungen und Loslassen nach einem vollständigen Reboot. Zur Initialisierung verwendet das lokale Initramfs `/gt811-start.sh`, `/usr/sbin/gt811-init-test`, `/usr/sbin/gt811-uinput` und `/etc/gt811/config.bin`. Die originale Konfiguration und das Android-Modul gehören **nicht** in dieses öffentliche Repository. Details: [GT811 Touchscreen](gt811-touchscreen.md).
+Erwartet: `Casper Goodix GT811 Touchscreen`, `BTN_TOUCH` (330) und `ABS_X` / `ABS_Y`. Nach dem vollständigen Reboot bestätigt `od -An -tx1 -w16 /dev/input/event1` Fingerbewegungen und Loslassen; `evtest` ist nur nutzbar, falls das Zusatzprogramm installiert ist. Aktuell verwendet der Boot-Treiber `--irq` statt des alten Polling-Modus. Zur Initialisierung verwendet das lokale Initramfs `/gt811-start.sh`, `/usr/sbin/gt811-init-test`, `/usr/sbin/gt811-uinput` und `/etc/gt811/config.bin`. Die originale Konfiguration und das Android-Modul gehören **nicht** in dieses öffentliche Repository. Details: [GT811 Touchscreen](gt811-touchscreen.md).
+
+**Grafischer Diagnosetest:** Die lokal gebaute ARMHF-Datei `casper-touch-test` lässt sich per `ssh ... 'cat > /tmp/casper-touch-test && chmod 755 /tmp/casper-touch-test' < /tmp/casper-touch-test` übertragen und direkt starten. Sie zeichnet auf `/dev/fb0` (800×480, 32 Bit, Stride 3200) und liest `/dev/input/event1`. Die horizontal korrigierte Version führt das Kreuz dem Finger nach; die Y-Anzeige verwendet Ursprung links unten. Beobachtete Ränder: X links 8 / rechts 788, Y unten 4 / oben 472. Nicht die X-Spiegelung zusätzlich im Treiber aktivieren, ohne die Test-App anzupassen.
 
 ## WLAN-Konfiguration (aktiv)
 
