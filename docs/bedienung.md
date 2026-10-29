@@ -162,3 +162,9 @@ Falls `grep` in der laufenden Minimalumgebung nicht enthalten ist, über BusyBox
 - Ein Austausch der Bootdateien auf der SD ersetzt keine Neuinstallation von Android.
 - U-Boot auf der SD liegt außerhalb des FAT32-Dateisystems. Ein neu formatiertes Medium bootet daher **nicht automatisch**, nur weil man vier Dateien darauf kopiert.
 - Die zweite, defekte Tablet-Hardware ist eine separate Reparatur und gehört nicht zur bestätigten Linux-Bootkonfiguration.
+
+## Update 2026-10-29: Debian 13 and graphical mode
+
+**The current microSD configuration no longer stops at the BusyBox shell.** It boots Debian GNU/Linux 13 (trixie, armhf), using `initramfs-debian.cpio.gz` and `switch_root` to ext4 `/dev/mmcblk0p2`. The BusyBox-only instructions above remain useful for the earlier rescue image; they are not the current Debian login flow. Debian has SysVinit and OpenSSH; the FAT32 partition `/dev/mmcblk0p1` is not automatically mounted and can be inspected read-only at `/mnt/casper-boot`.
+
+The Debian system has already run **Xorg, Matchbox window manager, xterm and Matchbox Keyboard** with output on the tablet LCD. The GT811 shows up in `DISPLAY=:0 XAUTHORITY=/root/.Xauthority xinput list`. Xorg can be started over SSH using `nohup xinit /root/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty -nolisten tcp > /root/xorg-start.log 2>&1 < /dev/null &`. The keyboard can be launched with `DISPLAY=:0 XAUTHORITY=/root/.Xauthority matchbox-keyboard > /tmp/matchbox-keyboard.log 2>&1 &`. **Touch horizontal calibration, left keyboard padding, practical typing and desktop autostart are not yet completely tested.** See [full Debian 13/X11 guide](debian13-x11.md) for the complete setup and WLAN diagnostics. Do not publish `/etc/wpa_supplicant/casper.conf` or original device-derived firmware/configuration.
