@@ -83,3 +83,9 @@ See [roadmap](docs/roadmap.md) and [operation guide](docs/bedienung.md).
 ## Acknowledgments
 
 Built on [U-Boot](https://www.denx.de/wiki/U-Boot/), [Linux](https://kernel.org/) and [BusyBox](https://busybox.net/), using the community Allwinner sunxi device-tree and board support.
+
+## Debian 13 and touchscreen GUI (2026-10-29)
+
+The current development SD card now boots **Debian GNU/Linux 13 (trixie, armhf)** from a separate ext4 root partition with SysVinit and OpenSSH. The boot FAT32 partition keeps U-Boot, kernel, DTB and a Debian-specific initramfs. The original Android NAND is unchanged. **Xorg with fbdev, Matchbox window manager, xterm and Matchbox Keyboard has been started successfully over SSH** on the 800×480 touchscreen. XInput recognizes the Casper Goodix GT811 pointer. A horizontal X flip is still required/tested at the XInput layer; persistent calibration, correct key typing and the left keyboard-margin/layout issue remain open. GUI autostart is not yet configured.
+
+Early RTL8192CU firmware diagnostics were improved by running the logging script before moving proc/sys/dev at `switch_root`. A diagnostic boot completed and the previously observed Realtek firmware load errors were absent, but WLAN still sometimes disconnects and roams. Both the original and repacked Debian archive already contained the Realtek firmware; do not claim the copy operation fixed it. See **[Debian 13 and X11 setup, diagnostics and next steps](docs/debian13-x11.md)** for details and commands.
