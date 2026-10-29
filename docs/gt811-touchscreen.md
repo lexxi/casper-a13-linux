@@ -101,3 +101,7 @@ One boot displayed `FAT-fs (mmcblk0p1): Volume was not properly unmounted`. A su
 2. Investigate `Bus error` in the experimental driver and stabilize a single central X/Y conversion.
 3. Retest automatic IRQ startup and the four screen edges after any driver change.
 4. Optionally publish a reviewed, self-contained framebuffer touch diagnostic source without private artifacts.
+
+## X11 integration (2026-10-29)
+
+On the new Debian 13 SD rootfs, Xorg (fbdev), Matchbox and Matchbox Keyboard run on the LCD. `xinput list` registered `Casper Goodix GT811 Touchscreen` as an X11 pointer (observed ID 7, not guaranteed stable). The **horizontal X reversal** remains apparent when using the on-screen keyboard. A reversible XInput experiment is `DISPLAY=:0 XAUTHORITY=/root/.Xauthority xinput set-prop 7 'Coordinate Transformation Matrix' -1 0 1 0 1 0 0 0 1`; verify left/right key locations before storing an Xorg `InputClass` configuration. Do not apply a duplicate reversal in the user-space driver. A visible margin to the left of the keyboard's `q` key is under investigation; it might be window/layout geometry, not evdev calibration. See [Debian 13/X11 guide](debian13-x11.md).
