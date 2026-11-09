@@ -1,6 +1,6 @@
 # Roadmap and evidence
 
-Updated 2026-10-28.
+Updated 2026-11-09 (kernel reconstruction milestone).
 
 | Feature | Status | Evidence / next step |
 | --- | --- | --- |
@@ -47,3 +47,15 @@ Remaining: battery/USB voltage validation, shutdown failure recovery, regulatory
 The Casper now boots Debian GNU/Linux 13 trixie (armhf) from microSD: FAT32 `mmcblk0p1` for U-Boot/kernel/DTB/initramfs and ext4 `mmcblk0p2` for SysVinit/OpenSSH Debian. Kernel 6.12 #10 and sun4i DRM framebuffer still work. At one measured point, 411 MiB RAM was available and 2.9 GiB ext4 free. Installed minimal Xorg fbdev, Matchbox, xterm, and Matchbox Keyboard; tested Xorg startup via SSH and confirmed the Goodix GT811 appears in `xinput list` as a pointer. Keyboard is visibly drawn. **Still pending:** verify key entry/touch axis orientation, address a left margin before `q`, configure lasting XInput transformation and autostart.
 
 WLAN: Debian `ifupdown` and `wpa_supplicant` work but device may be renamed from `wlan0` to `wlx000d724820c2`; repeated AP association and `DISASSOC_LOW_ACK` remain. Initial early RTL8192CU firmware errors disappeared on a subsequent diagnostic boot; archive comparison showed all three Realtek firmware blobs already present, so the root cause remains uncertain. Adjusted the initramfs diagnostic order to log before moving `/proc`, `/sys`, `/dev`; the early diagnostic log is now created. See [Debian 13 and X11](debian13-x11.md).
+
+## Confirmed 2026-11-09: reproducible Linux 6.12 kernel reconstruction
+
+The original #10 kernel `.config` could not be retrieved from WSL files, `/proc/config.gz`, `/boot/config*` or `extract-ikconfig`. A new ARM `multi_v7_defconfig`-based configuration was built in stages:
+
+- **#1:** Debian 13, WLAN, SSH and GT811 registered; only `simplefb`, no DRM or backlight.
+- **#2:** `CONFIG_PINCTRL_AXP209=y` enabled AXP209 GPIO and backlight registration; LCD stayed black because the sun4i display backend was unbound.
+- **#3:** `CONFIG_DRM_SUN4I_BACKEND=y` enabled native sun4i DRM, `/dev/dri/card0`, `sun4i-drmdrmfb`, visible display/keyboard and working touch. Kernel #10 retained as SD fallback.
+
+**Open defect:** AXP209 IRQ 54 rises to about 100,001 interrupts and is disabled with `irq 54: nobody cared` at ~90 s; this was reproduced on the original kernel #10 too. It must not be described as a regression introduced by #3. Read-only PMIC IRQ investigations are next; assess power-key and charger event reliability before relying on them.
+
+The local full `.config` and compact `casper_a13_defconfig` are not yet committed; **do not confuse the documented key options with a complete reproducible config**. See [2026-11-09 kernel reconstruction and A/B procedure](kernel-reconstruction-2026-11-09.md).
