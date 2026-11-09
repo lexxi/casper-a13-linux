@@ -184,3 +184,24 @@ The current network initramfs includes ARMHF `/usr/sbin/iw`, `/usr/bin/evtest`, 
 To prevent `umount /mnt/sd` from returning `EBUSY`, Dropbear must not inherit `/mnt/sd/casper-boot.log` descriptors from the parent script. The tested invocation adds `</dev/null >/dev/null 2>&1` to the Dropbear command. Local NTP now targets `192.168.98.32`.
 
 The built initramfs includes local credentials and must not be committed to the public repository.
+
+## Kernel #3 reconstruction update (2026-11-09)
+
+The previous sections retain historical BusyBox build details and earlier network-only kernel settings. For current Debian 13, the kernel #10 `.config` was unavailable and was reconstructed from Linux 6.12.0 `multi_v7_defconfig` with the required builtin SoC/USB/WLAN/DRM/PMIC features.
+
+**Critical additions for native LCD:**
+
+```text
+CONFIG_PINCTRL_AXP209=y
+CONFIG_DRM_SUN4I=y
+CONFIG_DRM_SUN4I_BACKEND=y
+CONFIG_DRM_PANEL_SIMPLE=y
+CONFIG_BACKLIGHT_PWM=y
+CONFIG_PWM_SUN4I=y
+```
+
+With `PINCTRL_AXP209` disabled (#1), Backlight failed its enable-GPIO probe. With `DRM_SUN4I_BACKEND=m` (#2), the display backend remained unbound and the screen was black. The tested #3 has both set to `y`, boots Debian with working RTL8192CU/SSH and GT811 input, and registers sun4i DRM framebuffer, `/dev/dri/card0` and backlight. Keep kernel #10 as a bootable fallback.
+
+**Important:** On the current SD `boot.scr` chooses the variant; `boot-original.scr` boots `zImage` (#10) and `boot-test.scr` boots `zImage-test` (#3). `/mnt/casper-boot` must be mounted again after every Debian reboot. No automatic rollback exists. Do not commit the full kernel binary or private SD data. The working full `.config` and saved defconfig are still local and need to be explicitly transferred/reviewed before publication.
+
+**Known issue, NOT a #3-only regression:** AXP209 IRQ 54 interrupt storm disables that IRQ around 90 s after boot on kernel #10 and reconstructed versions. See [full 2026-11-09 tests and recovery notes](kernel-reconstruction-2026-11-09.md).
