@@ -2,7 +2,7 @@
 
 Reviving a 2012-era Casper / INTREEO TAB-WB72 tablet with mainline Linux, U-Boot and BusyBox, booted **from microSD without modifying the original Android NAND**.
 
-> **Status (2026-10-28):** Linux 6.12.0 kernel #10 boots from microSD without changing Android NAND. Native 800×480 DRM/LCD output, fast `rtl8192cu` WLAN, Dropbear SSH, AXP209 battery monitoring and safe power-button shutdown work. The original Goodix GT811 touch panel is initialized automatically at boot using PB3 wakeup, original panel settings and a PG11 falling-edge IRQ userspace bridge; finger presses, releases and movement are verified via Linux evdev. A standalone 800×480 framebuffer touch test also runs. Coordinate display is calibrated for origin at bottom-left; permanent driver-side X correction and a crash investigation remain open.
+> **Status (2026-11-09):** Debian 13 (trixie, armhf) boots from microSD with Linux 6.12.0. A lost kernel `.config` was reconstructed and **kernel #3** was successfully boot-tested with WLAN/SSH, native sun4i DRM (`/dev/dri/card0`, `sun4i-drmdrmfb`), AXP209 GPIO/backlight and Goodix GT811 touch. Kernel #10 is retained as a fallback. **Open reliability issue:** AXP209 IRQ 54 storms to ~100,001 events and is disabled around 90 s after boot on both the original #10 and reconstructed kernels; impact on power events is not yet resolved.
 
 ## Hardware
 
@@ -45,6 +45,7 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 - **[Windows und WSL2 installieren und verwenden](docs/wsl-setup.md)** — Ubuntu, Cross-Compiler, Windows/WSL-Dateizugriff und FEL per USB.
 - **[Casper starten und bedienen](docs/bedienung.md)** — SD-Boot, Bootdateien, aktuelle Eingabemöglichkeiten und Diagnose.
 - **[Kernel, U-Boot und BusyBox bauen](docs/build-and-boot.md)** — dokumentierte Build- und Bootschritte.
+- **[Kernel #3 rekonstruieren und testen (09.11.2026)](docs/kernel-reconstruction-2026-11-09.md)** — Kconfig-Korrekturen, sichere A/B-Bootauswahl, DRM-Ergebnis und AXP209 IRQ-54-Fehler.
 - [Hardwaredetails](docs/hardware.md), [GT811 Touchscreen](docs/gt811-touchscreen.md), [AXP209-Akku, NTP und Power Monitor](docs/power-management.md) und [Entwicklungsfahrplan](docs/roadmap.md).
 
 **Achtung:** Die SD-Bootloader-Installation kann bei Wahl des falschen Datenträgers Daten zerstören. Unsere Dokumentation enthält keine blind ausführbare Rohdatenträger-Flash-Anweisung.
@@ -66,10 +67,11 @@ The upstream Linux, U-Boot and BusyBox source trees are **not vendored** into th
 
 ## Current priorities
 
-- Preserve the working `rtl8192cu` kernel and initramfs locally; keep the older `rtl8xxxu` kernel as fallback.
+- Preserve the working reconstructed #3 `rtl8192cu`/sun4i DRM kernel and initramfs locally; keep **kernel #10** as the proven boot fallback. The actual regenerated `casper_a13_defconfig` is still on the WSL build machine and must be reviewed before publication.
+- Investigate the **existing AXP209 IRQ 54 interrupt storm** (also present in kernel #10); do not assume that a working power-supply sysfs interface proves reliable power-button or charger interrupts.
 - WLAN baseline: 30 pings at original position, 0% loss, 2.388/5.811/12.322 ms min/avg/max; 300 pings, 0% loss, 2.148/9.315/502.740 ms (occasional jitter remains).
 - Validate battery readings and USB input voltage under load.
-- GT811 single-touch works after reboot in IRQ mode, and a minimal framebuffer crosshair follows the finger. Next: fix the X coordinate centrally in the driver without double inversion; investigate a `Bus error` seen in an experimental rebuilt IRQ driver; preserve known-good image; optionally package the standalone diagnostic framebuffer tool. A complete GUI is not installed.
+- GT811 single-touch works after reboot in IRQ mode, and a minimal framebuffer crosshair follows the finger. Next: fix the X coordinate centrally in the driver without double inversion; investigate a `Bus error` seen in an experimental rebuilt IRQ driver; preserve known-good image; optionally package the standalone diagnostic framebuffer tool. The Debian Xorg/Matchbox UI and on-screen keyboard are installed and visible; complete independent use, key mapping and persistent calibration still require validation.
 
 See [roadmap](docs/roadmap.md) and [operation guide](docs/bedienung.md).
 
