@@ -1,0 +1,11 @@
+#!/bin/sh
+# Executed by run-parts /etc/boot.d from /etc/rc.local (SysVinit).
+SCRIPT=/usr/local/bin/casper-keyboard-toggle.py
+LOG=/var/log/casper-keyboard-toggle.log
+
+if pgrep -f '^/usr/bin/python3 -u /usr/local/bin/casper-keyboard-toggle.py$' >/dev/null; then
+    exit 0
+fi
+
+/usr/bin/python3 -u "$SCRIPT" >> "$LOG" 2>&1 &
+exit 0
