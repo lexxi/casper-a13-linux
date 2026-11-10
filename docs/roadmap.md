@@ -66,6 +66,6 @@ The local full `.config` and compact `casper_a13_defconfig` are not yet committe
 | --- | --- | --- |
 | Physical second HOME button via sun4i LRADC | **Verified** | Kernel #5; `CONFIG_KEYBOARD_SUN4I_LRADC=y`; `evtest /dev/input/event1` showed two KEY_HOME 102 press/release cycles |
 | Matchbox Keyboard hardware-toggle | **Verified interactively** | Python evdev reader toggles keyboard; `EVIOCGRAB` removes stray `^[[H` in xterm |
-| SysVinit keyboard-toggle boot startup | **Configured, reboot test pending** | `/etc/rc2.d/S03rc.local` runs `run-parts /etc/boot.d`; manual launch of `90-casper-keyboard` and log verified |
+| SysVinit keyboard-toggle boot startup | **Verified after reboot** | `/etc/rc2.d/S03rc.local` runs `run-parts /etc/boot.d`; user confirmed automatic launch and working button-toggle after reboot on 2026-11-10 |
 
 See [full kernel #5 LRADC/keyboard instructions](physical-home-key.md). Earlier pending graphics and kernel notes above describe historical stages; do not assume their input `eventN` numbers are current.
