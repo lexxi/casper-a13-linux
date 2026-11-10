@@ -205,3 +205,11 @@ With `PINCTRL_AXP209` disabled (#1), Backlight failed its enable-GPIO probe. Wit
 **Important:** On the current SD `boot.scr` chooses the variant; `boot-original.scr` boots `zImage` (#10) and `boot-test.scr` boots `zImage-test` (#3). `/mnt/casper-boot` must be mounted again after every Debian reboot. No automatic rollback exists. Do not commit the full kernel binary or private SD data. The working full `.config` and saved defconfig are still local and need to be explicitly transferred/reviewed before publication.
 
 **Known issue, NOT a #3-only regression:** AXP209 IRQ 54 interrupt storm disables that IRQ around 90 s after boot on kernel #10 and reconstructed versions. See [full 2026-11-09 tests and recovery notes](kernel-reconstruction-2026-11-09.md).
+
+## Kernel #5: physical LRADC HOME key (2026-11-10)
+
+The rebuilt Linux 6.12.0 **kernel #5** enabled `CONFIG_KEYBOARD_SUN4I_LRADC=y` and updated `sun5i-a13-q8-tablet.dts` to replace the reference Q8 analog volume buttons with the real Casper physical HOME button. Android LRADC measurements were 0x1b pressed and 0x3f released; with scaled 2.0 V Vref, the DTS uses 857142 µV and Linux `KEY_HOME` code 102. The compiled DTB and kernel booted successfully, and two complete press/release cycles were confirmed with `evtest` on `/dev/input/event1`.
+
+**Current active boot-file detail:** On the tested SD card, `boot.scr` selects **`zImage-test`**, `initramfs-debian.cpio.gz` and `sun5i-a13-q8-tablet.dtb`. The separate `boot-debian.scr` selects `zImage`. The older boot examples above are historical; always inspect the actual active SD `boot.scr` before swapping images. Backup the existing SD `zImage-test`, DTB and `boot.scr` off-card and verify their hashes before writing. The original Android NAND stays unchanged.
+
+The tested Python userspace toggle listens to the LRADC input, uses `EVIOCGRAB` to keep HOME events out of xterm and toggles Matchbox Keyboard without duplicate processes. Startup via `/etc/boot.d/90-casper-keyboard` under SysVinit `rc.local` works when invoked manually; **post-reboot autostart validation remains pending**. Full implementation, source links, file hashes and troubleshooting: [physical HOME key and on-screen keyboard](physical-home-key.md).
