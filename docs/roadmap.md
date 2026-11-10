@@ -69,3 +69,16 @@ The local full `.config` and compact `casper_a13_defconfig` are not yet committe
 | SysVinit keyboard-toggle boot startup | **Verified after reboot** | `/etc/rc2.d/S03rc.local` runs `run-parts /etc/boot.d`; user confirmed automatic launch and working button-toggle after reboot on 2026-11-10 |
 
 See [full kernel #5 LRADC/keyboard instructions](physical-home-key.md). Earlier pending graphics and kernel notes above describe historical stages; do not assume their input `eventN` numbers are current.
+
+## Verified 2026-11-10: touchscreen toolbox, SD recovery and external USB
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Casper WiFi v0.2 and saved network switching | **Verified after reboot** | `wpa_supplicant` `update_config=1`; SSID switching via touch and old SSID displayed as stored |
+| Casper Battery v0.2 | **Verified** | AXP209 CLI dump and Tkinter GUI, charging/discharging and USB voltage/current |
+| Casper touch-menu boot integration | **Verified after reboot** | `/root/.xinitrc` launches `casper-menu.py`; apps return to menu |
+| Matchbox QWERTZ number row | **Verified** | Extra `1234567890@!` row; small touch targets, usability polish open |
+| SD ext4 root and dpkg recovery | **Repaired and booted** | fsck on image copy, verified clean; original image retained, physical SD reliability not yet established |
+| ESPsoup / ESP32-C5 external USB | **Blocked by OTG detection** | MUSB `b_idle`; PG2 / `usb0_id_det` HIGH with Goobay 95006; alternate proper Mini-USB OTG host adapter pending |
+
+Sources: [tool setup and autostart](casper-tools-2026-11-10.md), [SD repair and USB OTG investigation](casper-sd-repair-2026-11-10.md). Existing AXP209 IRQ-54 behavior and previously recorded SD corruption should not be conflated; both need independent validation.
