@@ -8,7 +8,7 @@
 - A native Python evdev reader toggles `matchbox-keyboard` on the 800×480 Xorg/Matchbox desktop.
 - `EVIOCGRAB` prevents Xorg/xterm from receiving the same HOME key and printing `^[[H`.
 - Manual launch of `/etc/boot.d/90-casper-keyboard` started the Python process, grabbed LRADC and logged successful startup.
-- **Automatic restart/boot integration is configured but the post-reboot verification is still pending.** Do not mark it completed until verified.
+- **Automatic startup after reboot is verified:** SysVinit starts the keyboard-toggle reader, and the physical HOME button toggles the keyboard without manual intervention.
 
 The original Android NAND is unchanged.
 
@@ -169,10 +169,10 @@ tail -10 /var/log/casper-keyboard-toggle.log
 
 **Manually verified output:** one Python process, `LRADC grabbed exclusively`, `Waiting for HOME button...`.
 
-**Still pending:** after reboot, confirm that the process starts automatically *without* SSH launch and the physical button works with Xorg running. If not, examine `/etc/rc.local` execution and `/var/log/casper-keyboard-toggle.log`. There is no systemd unit on this installation.
+**Verified after reboot:** SysVinit runs the script automatically, and the physical HOME button successfully toggles the keyboard without manual intervention. For diagnostics, examine `/var/log/casper-keyboard-toggle.log`. There is no systemd unit on this installation.
 
 ## Follow-up
 
-- Confirm post-reboot SysVinit startup.
+- Post-reboot SysVinit startup: **verified 2026-11-10**.
 - Keep backups of the known-good kernel/DTB/boot script and record #5 config for reproducibility.
 - If the input device enumeration changes, replace the hardcoded `/dev/input/event1` with a stable `/dev/input/by-path`/udev match or a lookup by `Name="1c22800.lradc"`.
