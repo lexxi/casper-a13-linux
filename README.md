@@ -46,6 +46,7 @@ The exact board revision matters. See [hardware notes](docs/hardware.md).
 - **[Casper starten und bedienen](docs/bedienung.md)** — SD-Boot, Bootdateien, aktuelle Eingabemöglichkeiten und Diagnose.
 - **[Kernel, U-Boot und BusyBox bauen](docs/build-and-boot.md)** — dokumentierte Build- und Bootschritte.
 - **[Kernel #3 rekonstruieren und testen (09.11.2026)](docs/kernel-reconstruction-2026-11-09.md)** — Kconfig-Korrekturen, sichere A/B-Bootauswahl, DRM-Ergebnis und AXP209 IRQ-54-Fehler.
+- **[Kernel #5: physischer Home-Button und Bildschirmtastatur (10.11.2026)](docs/physical-home-key.md)** — LRADC-DTS, KEY_HOME, Python/EVIOCGRAB, Matchbox-Umschaltung und SysVinit-Startskript.
 - [Hardwaredetails](docs/hardware.md), [GT811 Touchscreen](docs/gt811-touchscreen.md), [AXP209-Akku, NTP und Power Monitor](docs/power-management.md) und [Entwicklungsfahrplan](docs/roadmap.md).
 
 **Achtung:** Die SD-Bootloader-Installation kann bei Wahl des falschen Datenträgers Daten zerstören. Unsere Dokumentation enthält keine blind ausführbare Rohdatenträger-Flash-Anweisung.
