@@ -59,3 +59,13 @@ The original #10 kernel `.config` could not be retrieved from WSL files, `/proc/
 **Open defect:** AXP209 IRQ 54 rises to about 100,001 interrupts and is disabled with `irq 54: nobody cared` at ~90 s; this was reproduced on the original kernel #10 too. It must not be described as a regression introduced by #3. Read-only PMIC IRQ investigations are next; assess power-key and charger event reliability before relying on them.
 
 The local full `.config` and compact `casper_a13_defconfig` are not yet committed; **do not confuse the documented key options with a complete reproducible config**. See [2026-11-09 kernel reconstruction and A/B procedure](kernel-reconstruction-2026-11-09.md).
+
+## 2026-11-10: kernel #5 physical HOME input and keyboard toggle
+
+| Feature | Status | Evidence / next step |
+| --- | --- | --- |
+| Physical second HOME button via sun4i LRADC | **Verified** | Kernel #5; `CONFIG_KEYBOARD_SUN4I_LRADC=y`; `evtest /dev/input/event1` showed two KEY_HOME 102 press/release cycles |
+| Matchbox Keyboard hardware-toggle | **Verified interactively** | Python evdev reader toggles keyboard; `EVIOCGRAB` removes stray `^[[H` in xterm |
+| SysVinit keyboard-toggle boot startup | **Configured, reboot test pending** | `/etc/rc2.d/S03rc.local` runs `run-parts /etc/boot.d`; manual launch of `90-casper-keyboard` and log verified |
+
+See [full kernel #5 LRADC/keyboard instructions](physical-home-key.md). Earlier pending graphics and kernel notes above describe historical stages; do not assume their input `eventN` numbers are current.
