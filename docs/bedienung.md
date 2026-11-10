@@ -176,3 +176,11 @@ Mit **Linux 6.12.0 Kernel #5** wird der zweite physische Taster über `1c22800.l
 Das geprüfte `/usr/local/bin/casper-keyboard-toggle.py` schaltet die Matchbox-Bildschirmtastatur durch Drücken des Hardwaretasters ein/aus. Dank exklusivem `EVIOCGRAB` erhält xterm kein zusätzliches `^[[H`. Manuell wurde auch das Startskript `/etc/boot.d/90-casper-keyboard` geprüft; es startet einen Python-Prozess und schreibt nach `/var/log/casper-keyboard-toggle.log`. Der **Neustarttest des SysVinit-Autostarts war erfolgreich**: Der Taster schaltet die Bildschirmtastatur nach dem Boot ohne manuelles Starten des Skripts ein und aus (10.11.2026).
 
 Details und sämtliche Installationsschritte: [Physischer HOME-Button / Bildschirmtastatur](physical-home-key.md).
+
+## Bestätigt 2026-11-10: Touch-Menü beim Einschalten
+
+Mit funktionierendem Linux-6.12-Kernel-#5 und dem Casper-spezifischen LCD-DTB startet nach jedem Neustart das Tkinter-Hauptmenü automatisch. Große Schaltflächen öffnen `Casper WiFi` (WLAN-Suche, Verbinden, gespeicherte Netze) und `Casper Battery` (AXP209-Prozentwert, Strom/Spannung, USB-Status). Schließen einer App kehrt ins Menü zurück. Der zweite physische HOME-Taster blendet die angepasste QWERTZ-Bildschirmtastatur mit Ziffernreihe ein/aus. Die alte Dokumentation der manuellen X11-Prototypen beschreibt frühere Entwicklungsstände.
+
+Quellen: [Quellskripte und Autostart](casper-tools-2026-11-10.md), [LCD/Touch-Fix](casper-lcd-touch-2026-11-10.md), [Dateisystemreparatur/OTG](casper-sd-repair-2026-11-10.md).
+
+**ESPsoup offen:** Der externe Mini-USB-OTG-Anschluss enumeriert bislang weder ESP32-C5 noch USB-Hub; mit dem getesteten Goobay-Adapter bleibt GPIO PG2 HIGH und MUSB `b_idle`. Ersatzadapter wird getestet, bevor Software geändert wird.
