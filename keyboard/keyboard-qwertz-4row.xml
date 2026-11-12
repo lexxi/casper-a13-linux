@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Casper TAB-WB72: experimental four-row German QWERTZ layout.
+     Copy to /root/casper-keyboard/keyboard.xml only after saving a backup.
+     MB_KBD_CONFIG is already set by casper-keyboard-toggle.py.
+     The 123 button uses Matchbox's existing modifier:mod2 mechanism;
+     digits 1..0 appear on the top letter row in that mode. -->
+<keyboard>
+  <layout id="Casper QWERTZ 4-row">
+    <row>
+      <key width="900" obey-caps="true">
+        <default display="q" action="xkeysym:q"/>
+        <shifted display="Q" action="xkeysym:Q"/>
+        <mod2 display="1" action="xkeysym:1"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="w" action="xkeysym:w"/>
+        <shifted display="W" action="xkeysym:W"/>
+        <mod2 display="2" action="xkeysym:2"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="e" action="xkeysym:e"/>
+        <shifted display="E" action="xkeysym:E"/>
+        <mod2 display="3" action="xkeysym:3"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="r" action="xkeysym:r"/>
+        <shifted display="R" action="xkeysym:R"/>
+        <mod2 display="4" action="xkeysym:4"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="t" action="xkeysym:t"/>
+        <shifted display="T" action="xkeysym:T"/>
+        <mod2 display="5" action="xkeysym:5"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="z" action="xkeysym:z"/>
+        <shifted display="Z" action="xkeysym:Z"/>
+        <mod2 display="6" action="xkeysym:6"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="u" action="xkeysym:u"/>
+        <shifted display="U" action="xkeysym:U"/>
+        <mod2 display="7" action="xkeysym:7"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="i" action="xkeysym:i"/>
+        <shifted display="I" action="xkeysym:I"/>
+        <mod2 display="8" action="xkeysym:8"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="o" action="xkeysym:o"/>
+        <shifted display="O" action="xkeysym:O"/>
+        <mod2 display="9" action="xkeysym:9"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="p" action="xkeysym:p"/>
+        <shifted display="P" action="xkeysym:P"/>
+        <mod2 display="0" action="xkeysym:0"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="ü" action="xkeysym:udiaeresis"/>
+        <shifted display="Ü" action="xkeysym:Udiaeresis"/>
+      </key>
+      <key width="1250"><default display="⇦" action="backspace"/></key>
+    </row>
+    <row>
+      <key width="900" obey-caps="true">
+        <default display="a" action="xkeysym:a"/>
+        <shifted display="A" action="xkeysym:A"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="s" action="xkeysym:s"/>
+        <shifted display="S" action="xkeysym:S"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="d" action="xkeysym:d"/>
+        <shifted display="D" action="xkeysym:D"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="f" action="xkeysym:f"/>
+        <shifted display="F" action="xkeysym:F"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="g" action="xkeysym:g"/>
+        <shifted display="G" action="xkeysym:G"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="h" action="xkeysym:h"/>
+        <shifted display="H" action="xkeysym:H"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="j" action="xkeysym:j"/>
+        <shifted display="J" action="xkeysym:J"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="k" action="xkeysym:k"/>
+        <shifted display="K" action="xkeysym:K"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="l" action="xkeysym:l"/>
+        <shifted display="L" action="xkeysym:L"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="ö" action="xkeysym:odiaeresis"/>
+        <shifted display="Ö" action="xkeysym:Odiaeresis"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="ä" action="xkeysym:adiaeresis"/>
+        <shifted display="Ä" action="xkeysym:Adiaeresis"/>
+      </key>
+      <key width="1250"><default display="⏎" action="return"/></key>
+    </row>
+    <row>
+      <key width="1350">
+        <default display="⇧" action="modifier:shift"/>
+        <caps display="⬆" action="modifier:shift"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="y" action="xkeysym:y"/>
+        <shifted display="Y" action="xkeysym:Y"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="x" action="xkeysym:x"/>
+        <shifted display="X" action="xkeysym:X"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="c" action="xkeysym:c"/>
+        <shifted display="C" action="xkeysym:C"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="v" action="xkeysym:v"/>
+        <shifted display="V" action="xkeysym:V"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="b" action="xkeysym:b"/>
+        <shifted display="B" action="xkeysym:B"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="n" action="xkeysym:n"/>
+        <shifted display="N" action="xkeysym:N"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="m" action="xkeysym:m"/>
+        <shifted display="M" action="xkeysym:M"/>
+      </key>
+      <key width="900" obey-caps="true">
+        <default display="ß" action="xkeysym:ssharp"/>
+        <shifted display="ẞ" action="xkeysym:ssharp"/>
+      </key>
+      <key width="900"><default display="." action="xkeysym:period"/></key>
+      <key width="900"><default display="," action="xkeysym:comma"/></key>
+    </row>
+    <row>
+      <key width="1450">
+        <default display="123" action="modifier:mod2"/>
+        <mod2 display="ABC" action="modifier:mod2"/>
+      </key>
+      <key width="900"><default display="@" action="xkeysym:at"/></key>
+      <key width="900"><default display="-" action="xkeysym:minus"/></key>
+      <key width="900"><default display="/" action="xkeysym:slash"/></key>
+      <key width="900"><default display=":" action="xkeysym:colon"/></key>
+      <key width="900"><default display="!" action="xkeysym:exclam"/></key>
+      <key width="5000"><default display=" " action="space"/></key>
+    </row>
+  </layout>
+</keyboard>
