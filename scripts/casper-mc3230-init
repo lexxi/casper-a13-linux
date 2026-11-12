@@ -1,0 +1,14 @@
+#!/bin/sh
+# Casper TAB-WB72: load the locally built MC3230 module and register I2C-1/0x4c.
+# This hook assumes the exact matching kernel module is installed locally.
+set -eu
+
+MOD="/lib/modules/$(uname -r)/extra/mc3230.ko"
+
+if [ ! -d /sys/module/mc3230 ]; then
+    /usr/sbin/insmod "$MOD"
+fi
+
+if [ ! -e /sys/bus/i2c/devices/1-004c ]; then
+    echo mc3230 0x4c > /sys/bus/i2c/devices/i2c-1/new_device
+fi
