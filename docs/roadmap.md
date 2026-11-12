@@ -82,3 +82,15 @@ See [full kernel #5 LRADC/keyboard instructions](physical-home-key.md). Earlier 
 | ESPsoup / ESP32-C5 external USB | **Blocked by OTG detection** | MUSB `b_idle`; PG2 / `usb0_id_det` HIGH with Goobay 95006; alternate proper Mini-USB OTG host adapter pending |
 
 Sources: [tool setup and autostart](casper-tools-2026-11-10.md), [SD repair and USB OTG investigation](casper-sd-repair-2026-11-10.md). Existing AXP209 IRQ-54 behavior and previously recorded SD corruption should not be conflated; both need independent validation.
+
+## Verified 2026-11-12: motion sensor and menu status
+
+| Item | Status | Evidence / next step |
+| --- | --- | --- |
+| Internal accelerometer | **Working with MC3230 driver** | Android legacy `mma7660` module srcversion confirmed; mainline Linux 6.12 `mma7660` returned 0/0/0; `mc3230.ko` at I²C-1/0x4c produces varying X/Y/Z raw values |
+| MC3230 reboot persistence | **Verified after reboot** | Local `/usr/local/sbin/casper-mc3230-init`, `/etc/boot.d/85-casper-mc3230`, kernel #5 unchanged |
+| Casper menu v0.2 | **Live tilt status verified** | Four buttons WLAN/Akku/Terminal/NetSurf; brightness, display-off, HOME hint and 1-second IIO status refresh |
+| Orientation calibration / rotation | **Pending** | Physical sensor axes still need reliable direction mapping. Xrandr dynamic rotation previously caused Xorg SIGSEGV; no auto-rotation enabled |
+| Camera and further keys | **Pending** | Original Android reports `gc0308`/`gc0309` and `sun5i_csi0`, `sun4i-keyboard`; no Debian camera validation yet |
+
+Full evidence and local installation notes: [MC3230 accelerometer](mc3230-accelerometer-2026-11-12.md). Keep original Android NAND and extracted proprietary artifacts out of this repo.
