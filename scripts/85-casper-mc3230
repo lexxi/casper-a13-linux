@@ -1,0 +1,4 @@
+#!/bin/sh
+# Install executable at /etc/boot.d/85-casper-mc3230 on the Casper.
+# Existing SysVinit rc.local runs: run-parts /etc/boot.d
+/usr/local/sbin/casper-mc3230-init
