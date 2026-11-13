@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Casper TAB-WB72 – Touch-Menü v0.4: mehrere Werkzeuge, GT811-MENU und Power-Aktionen."""
+"""Casper TAB-WB72 – Touch-Menü v0.5: flackerfreier Wechsel, GT811-MENU und Power-Aktionen."""
 
 import os
 import shutil
@@ -305,7 +305,10 @@ class CasperMenu:
             return
 
         self.children.add(child)
-        self.root.withdraw()
+        # Keep the launcher mapped until the new window is ready.
+        # Hiding it immediately exposes a previously opened application
+        # for a moment (e.g. Battery between MENU and WiFi).
+        self.info.set(f"Starte {name} …")
         self.root.after(350, lambda proc=child: self.watch_child(proc))
 
     def watch_child(self, child):
