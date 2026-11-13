@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Casper TAB-WB72 – Touch-Menü v0.3: GT811-MENU und Power-Aktionen."""
+"""Casper TAB-WB72 – Touch-Menü v0.4: mehrere Werkzeuge, GT811-MENU und Power-Aktionen."""
 
 import os
 import shutil
@@ -41,7 +41,7 @@ def read_number(path, default):
 class CasperMenu:
     def __init__(self, root):
         self.root = root
-        self.child = None
+        self.children = set()
         self.initializing = True
         self.key_fd = None
         self.key_buffer = b""
@@ -288,11 +288,9 @@ class CasperMenu:
             self.root.after(100, self.poll_menu_key)
 
     def launch(self, name):
-        if self.child is not None:
-            return
-
+        # MENU can reopen the launcher while another tool is still running.
+        # Do not prevent launching a second tool in that situation.
         command = TOOLS[name]
-
         if not Path(command[0]).is_file():
             self.info.set(f"Programm fehlt: {name}")
             return
@@ -301,34 +299,31 @@ class CasperMenu:
         env.setdefault("DISPLAY", ":0")
 
         try:
-            self.child = subprocess.Popen(command, env=env)
+            child = subprocess.Popen(command, env=env)
         except OSError as exc:
             self.info.set(f"Startfehler: {exc}")
-            self.child = None
             return
 
+        self.children.add(child)
         self.root.withdraw()
-        self.root.after(350, self.watch_child)
+        self.root.after(350, lambda proc=child: self.watch_child(proc))
 
-    def watch_child(self):
-        if self.child is None:
+    def watch_child(self, child):
+        if child.poll() is None:
+            self.root.after(350, lambda proc=child: self.watch_child(proc))
             return
 
-        if self.child.poll() is None:
-            self.root.after(350, self.watch_child)
-            return
-
-        code = self.child.returncode
-        self.child = None
-
+        self.children.discard(child)
+        code = child.returncode
         self.info.set(
-            "Anwendung beendet"
-            if code == 0
-            else f"Beendet: Code {code}"
+            "Anwendung beendet" if code == 0 else f"Beendet: Code {code}"
         )
 
-        self.root.deiconify()
-        self.root.lift()
+        # Do not steal focus from another still-running tool.
+        # MENU remains available to bring the launcher forward any time.
+        if not self.children:
+            self.root.deiconify()
+            self.root.lift()
 
     def close(self):
         if self.key_fd is not None:
